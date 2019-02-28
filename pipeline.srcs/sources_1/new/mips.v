@@ -32,6 +32,11 @@ module mips(
     wire[31:0] aluoutM, wdataM, pc_branchM;
     wire[4:0] wdstM;
     
+    wire mem_wen;
+    wire[31:0] memout, memoutW, aluoutW;
+    wire[4:0] wdstW;
+    wire sel_reg_wdata;
+    
     
     pc mips_pc(
         .clk(clk),
@@ -79,7 +84,7 @@ module mips(
         .clk(clk),
         .rs1(rs),
         .rs2(rt),
-        .rd(),
+        .rd(wdstW),
         .wen(reg_wen),
         .wdata(reg_wdata),
         .rs1o(reg_rs1o),
@@ -116,7 +121,7 @@ module mips(
         .out5(saE)
     );
     
-    extend_imm16(
+    extend_imm16 ext_imm16(
         .imm16(imm16),
         .out32(extimm16)
     );
@@ -161,7 +166,7 @@ module mips(
     
     assign left32 = {extimm16[29:0], 2'b00};
     
-    adder pc4_plus_imm(
+    adder32 pc4_plus_imm(
         .A(left32),
         .B(pc_plus4E),
         .C(pc_branch)
@@ -197,6 +202,39 @@ module mips(
         .out32(pc_branchM)
     );
     
+    // access memory
+    dm mips_dm(
+        .clk(clk),
+        .addr(aluoutM),
+        .wen(mem_wen),
+        .wdata(wdataM),
+        .out(memout)
+    );
     
+    myreg aluout_regW(
+        .clk(clk),
+        .in32(aluoutM),
+        .out32(aluoutW)
+    );
     
+    myreg memoutM(
+        .clk(clk),
+        .in32(memout),
+        .out32(memoutW)
+    );
+    
+    myreg5 wdst_regW(
+        .clk(clk),
+        .in5(wdstM),
+        .out5(wdstW)
+    );
+    
+    // write back
+    mux32_2 mux_reg_wdata(
+        .in1(aluoutW),
+        .in2(memoutW),
+        .sel(sel_reg_wdata),
+        .out(reg_wdata)
+    );
+  
 endmodule
