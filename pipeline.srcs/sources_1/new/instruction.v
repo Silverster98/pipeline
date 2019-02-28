@@ -86,3 +86,13 @@
     `define INST_ERET   6'b011000 // eret // decode according to low 6 bit
     `define INST_MF     5'b00000  // mf // decode according to rs
     `define INST_MT     5'b00100  // mt // decode according to rs
+
+
+// ALU
+`define ALU_CTRL  3
+`define ALU_ADD   3'b000
+`define ALU_SUB   3'b001
+`define ALU_AND   3'b010
+`define ALU_OR    3'b011
+`define ALU_SL    3'b100
+`define ALU_SR    3'b101
