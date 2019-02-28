@@ -37,6 +37,24 @@ module mips(
     wire[4:0] wdstW;
     wire sel_reg_wdata;
     
+    wire branch;
+                                    
+    wire reg_wenE, mem_wenE, branchE; 
+    wire[2:0] alu_ctrlE;
+    wire sel_reg_wdataE, sel_srcBE, sel_regdstE;
+    
+    cu mips_cu(
+        .op(op),
+        .funct(funct),
+        .reg_wen(reg_wen),
+        .mem_wen(mem_wen),
+        .branch(branch),
+        .aluctrl(alu_ctrl),
+        .sel_reg_wdata(sel_reg_wdata),
+        .sel_srcB(sel_srcB),
+        .sel_regdst(sel_regdst)
+    );
+    
     
     pc mips_pc(
         .clk(clk),
@@ -50,16 +68,16 @@ module mips(
         .inst(im_out)
     );
     
-    myreg ir(
-        .clk(clk),
-        .in32(im_out),
-        .out32(inst)
-    );
-    
     adder32 pc_plus4_adder(
         .A(pc),
         .B(32'h00000004),
         .C(pc_plus4)
+    );
+    
+    myreg ir(
+        .clk(clk),
+        .in32(im_out),
+        .out32(inst)
     );
     
     myreg pc4_regD(
@@ -138,27 +156,45 @@ module mips(
         .out32(pc_plus4E)
     );
     
+    ctrl_regE mips_ctrl_regE(
+        .clk(clk),
+        .reg_wen(reg_wen),
+        .mem_wen(mem_wen),
+        .branch(branch),
+        .aluctrl(alu_ctrl),
+        .sel_reg_wdata(sel_reg_wdata),
+        .sel_srcB(sel_srcB),
+        .sel_regdst(sel_regdst),
+        .reg_wenE(reg_wenE),
+        .mem_wenE(mem_wenE),
+        .branchE(branchE),
+        .aluctrlE(alu_ctrlE),
+        .sel_reg_wdataE(sel_reg_wdataE),
+        .sel_srcBE(sel_srcBE),
+        .sel_regdstE(sel_regdstE)
+    );
+    
     // execute
     assign srcA = A;
     
     mux32_2 mux_srcB(
         .in1(B),
         .in2(extimm16),
-        .sel(sel_srcB),
+        .sel(sel_srcBE),
         .out(srcB)
     );
     
     mux5_2 mux_regdst(
         .in1(rtE),
         .in2(rdE),
-        .sel(sel_regdst),
+        .sel(sel_regdstE),
         .out(write_regE)
     );
     
     alu mips_alu(
         .A(srcA),
         .B(srcB),
-        .alu_ctrl(alu_ctrl),
+        .alu_ctrl(alu_ctrlE),
         .sa(saE),
         .C(C),
         .beqout(beqout)
