@@ -22,7 +22,7 @@ module mips(
     wire[31:0] reg_rs1o, reg_rs2o;
     
     wire[31:0] A, B, C, srcA, srcB;
-    wire[4:0] rtE, rdE, write_regE, saE;
+    wire[4:0] rsE, rtE, rdE, wdstE, saE;
     wire sel_srcB, sel_regdst;
     wire[2:0] alu_ctrl;
     wire beqout;
@@ -45,6 +45,9 @@ module mips(
     wire sel_reg_wdataE, sel_srcBE, sel_regdstE;
     wire reg_wenM, mem_wenM, branchM, sel_reg_wdataM;
     wire reg_wenW, sel_reg_wdataW;
+    
+    wire[1:0] sel_forward_rs, sel_forward_rt;
+    wire[31:0] forward_B;
     
     cu mips_cu(
         .op(op),
@@ -130,6 +133,12 @@ module mips(
         .out32(B)
     );
     
+    myreg5 rs_reg(
+        .clk(clk),
+        .in5(rs),
+        .out5(rsE)
+    );
+    
     myreg5 rt_reg(
         .clk(clk),
         .in5(rt),
@@ -184,10 +193,26 @@ module mips(
     );
     
     /**************** next is execute part ****************/
-    assign srcA = A;
+//    assign srcA = A;
+    mux32_4 mux_forward_srcA(
+        .in1(A),
+        .in2(reg_wdata),
+        .in3(aluoutM),
+        .sel(sel_forward_rs),
+        .out(srcA)
+    );
+    
+    mux32_4 mux_forward_srcB(
+        .in1(B),
+        .in2(reg_wdata),
+        .in3(aluoutM),
+        .sel(sel_forward_rt),
+        .out(forward_B)
+    );
+    
     
     mux32_2 mux_srcB(
-        .in1(B),
+        .in1(forward_B),
         .in2(extimm16E),
         .sel(sel_srcBE),
         .out(srcB)
@@ -197,7 +222,7 @@ module mips(
         .in1(rtE),
         .in2(rdE),
         .sel(sel_regdstE),
-        .out(write_regE)
+        .out(wdstE)
     );
     
     alu mips_alu(
@@ -237,7 +262,7 @@ module mips(
     
     myreg5 wdst_regM(
         .clk(clk),
-        .in5(write_regE),
+        .in5(wdstE),
         .out5(wdstM)
     );
     
@@ -303,6 +328,18 @@ module mips(
         .in2(memoutW),
         .sel(sel_reg_wdataW),
         .out(reg_wdata)
+    );
+    
+    /**************** next is conflict detect part ****************/
+    conflict_detect mips_conflict_detect(
+        .rsE(rsE),
+        .rtE(rtE),
+        .wdstM(wdstM),
+        .wdstW(wdstW),
+        .reg_wenM(reg_wenM),
+        .reg_wenW(reg_wenW),
+        .sel_forward_rs(sel_forward_rs),
+        .sel_forward_rt(sel_forward_rt)
     );
   
 endmodule
