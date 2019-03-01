@@ -11,6 +11,16 @@ module ctrl_regE(
     output reg sel_reg_wdataE, sel_srcBE, sel_regdstE
     );
     
+    initial begin
+        reg_wenE = 0;
+        mem_wenE = 0;
+        branchE  = 0;
+        aluctrlE = 0;
+        sel_reg_wdataE <= 0;
+        sel_srcBE = 0;
+        sel_regdstE = 0;
+    end
+    
     always @ (posedge clk) begin
         reg_wenE <= reg_wen;
         mem_wenE <= mem_wen;
