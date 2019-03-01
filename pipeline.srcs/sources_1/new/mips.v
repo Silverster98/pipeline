@@ -58,6 +58,14 @@ module mips(
         .sel_regdst(sel_regdst)
     );
     
+    /**************** next is inst fetch part ****************/
+    mux32_2 mux_npc(
+        .in1(pc_plus4),
+        .in2(pc_branchM),
+        .sel(sel_branch),
+        .out(npc)
+    );
+    
     
     pc mips_pc(
         .clk(clk),
@@ -89,9 +97,7 @@ module mips(
         .out32(pc_plus4D)
     );
     
-    // decode
-    assign npc = pc_plus4;
-    
+    /**************** next is inst decode part ****************/
     assign op = inst[31:26];
     assign rs = inst[25:21];
     assign rt = inst[20:16];
@@ -177,7 +183,7 @@ module mips(
         .sel_regdstE(sel_regdstE)
     );
     
-    // execute
+    /**************** next is execute part ****************/
     assign srcA = A;
     
     mux32_2 mux_srcB(
@@ -253,7 +259,7 @@ module mips(
         .sel_reg_wdataM(sel_reg_wdataM)
     );
     
-    // access memory
+    /**************** next is memary access part ****************/
     
     assign sel_branch = branchM & beqoutM;
     
@@ -291,7 +297,7 @@ module mips(
         .sel_reg_wdataW(sel_reg_wdataW)
     );
     
-    // write back
+    /**************** next is write back part ****************/
     mux32_2 mux_reg_wdata(
         .in1(aluoutW),
         .in2(memoutW),
