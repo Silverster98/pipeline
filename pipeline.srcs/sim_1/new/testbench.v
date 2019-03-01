@@ -6,6 +6,7 @@ module testbench();
     
     initial begin
         $readmemh("/home/silvester/project/pipeline/inst.txt", mips_core.mips_im.im);
+        $readmemh("/home/silvester/project/pipeline/regdata.txt", mips_core.mips_regfile.gpr);
         rst = 1;
         clk = 0;
         #17 rst = 0;
