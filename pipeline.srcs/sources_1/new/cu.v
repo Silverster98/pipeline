@@ -76,7 +76,7 @@ module cu(
                 reg_wen    = 1;
                 mem_wen    = 0;
                 branch     = 0;
-                aluctrl    = `ALU_ADD;
+                aluctrl    = `ALU_SR;
                 sel_srcB   = 0;
                 sel_regdst = 1;
                 sel_reg_wdata = 0;
