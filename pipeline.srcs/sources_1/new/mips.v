@@ -31,6 +31,7 @@ module mips(
     wire beqoutM;
     wire[31:0] aluoutM, wdataM, pc_branchM;
     wire[4:0] wdstM;
+    wire sel_branch;
     
     wire mem_wen;
     wire[31:0] memout, memoutW, aluoutW;
@@ -42,6 +43,8 @@ module mips(
     wire reg_wenE, mem_wenE, branchE; 
     wire[2:0] alu_ctrlE;
     wire sel_reg_wdataE, sel_srcBE, sel_regdstE;
+    wire reg_wenM, mem_wenM, branchM, sel_reg_wdataM;
+    wire reg_wenW, sel_reg_wdataW;
     
     cu mips_cu(
         .op(op),
@@ -103,7 +106,7 @@ module mips(
         .rs1(rs),
         .rs2(rt),
         .rd(wdstW),
-        .wen(reg_wen),
+        .wen(reg_wenW),
         .wdata(reg_wdata),
         .rs1o(reg_rs1o),
         .rs2o(reg_rs2o)
@@ -179,7 +182,7 @@ module mips(
     
     mux32_2 mux_srcB(
         .in1(B),
-        .in2(extimm16),
+        .in2(extimm16E),
         .sel(sel_srcBE),
         .out(srcB)
     );
@@ -238,11 +241,26 @@ module mips(
         .out32(pc_branchM)
     );
     
+    ctrl_regM mips_ctrl_regM(
+        .clk(clk),
+        .reg_wen(reg_wenE),
+        .mem_wen(mem_wenE),
+        .branch(branchE),
+        .sel_reg_wdata(sel_reg_wdataE),
+        .reg_wenM(reg_wenM),
+        .mem_wenM(mem_wenM),
+        .branchM(branchM),
+        .sel_reg_wdataM(sel_reg_wdataM)
+    );
+    
     // access memory
+    
+    assign sel_branch = branchM & beqoutM;
+    
     dm mips_dm(
         .clk(clk),
         .addr(aluoutM),
-        .wen(mem_wen),
+        .wen(mem_wenM),
         .wdata(wdataM),
         .out(memout)
     );
@@ -265,11 +283,19 @@ module mips(
         .out5(wdstW)
     );
     
+    ctrl_regW mips_ctrl_regW(
+        .clk(clk),
+        .reg_wen(reg_wenM),
+        .sel_reg_wdata(sel_reg_wdataM),
+        .reg_wenW(reg_wenW),
+        .sel_reg_wdataW(sel_reg_wdataW)
+    );
+    
     // write back
     mux32_2 mux_reg_wdata(
         .in1(aluoutW),
         .in2(memoutW),
-        .sel(sel_reg_wdata),
+        .sel(sel_reg_wdataW),
         .out(reg_wdata)
     );
   
