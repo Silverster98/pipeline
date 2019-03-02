@@ -8,6 +8,7 @@ module mips(
     wire[31:0] npc, pc;
     wire[31:0] im_out, inst;
     wire[31:0] pc_plus4;
+    wire stallF, stallD, flushE;
     
     wire[5:0] op;
     wire[4:0] rs, rt, rd;
@@ -49,6 +50,7 @@ module mips(
     wire[1:0] sel_forward_rs, sel_forward_rt;
     wire[31:0] forward_B;
     
+    /**************** mips control unit ****************/
     cu mips_cu(
         .op(op),
         .funct(funct),
@@ -73,6 +75,7 @@ module mips(
     pc mips_pc(
         .clk(clk),
         .rst(rst),
+        .en(!stallF),
         .npc(npc),
         .pc(pc)
     );
@@ -88,14 +91,16 @@ module mips(
         .C(pc_plus4)
     );
     
-    myreg ir(
+    myreg_en ir(
         .clk(clk),
+        .en(!stallD),
         .in32(im_out),
         .out32(inst)
     );
     
-    myreg pc4_regD(
+    myreg_en pc4_regD(
         .clk(clk),
+        .en(!stallD),
         .in32(pc_plus4),
         .out32(pc_plus4D)
     );
@@ -176,6 +181,7 @@ module mips(
     
     ctrl_regE mips_ctrl_regE(
         .clk(clk),
+        .en(flushE),
         .reg_wen(reg_wen),
         .mem_wen(mem_wen),
         .branch(branch),
@@ -338,8 +344,14 @@ module mips(
         .wdstW(wdstW),
         .reg_wenM(reg_wenM),
         .reg_wenW(reg_wenW),
+        .rs(rs),
+        .rt(rt),
+        .sel_reg_wdata(sel_reg_wdataE),
         .sel_forward_rs(sel_forward_rs),
-        .sel_forward_rt(sel_forward_rt)
+        .sel_forward_rt(sel_forward_rt),
+        .stallF(stallF),
+        .stallD(stallD),
+        .flushE(flushE)
     );
   
 endmodule

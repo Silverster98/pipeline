@@ -116,12 +116,28 @@ module cu(
                 mem_wen    = 0;
                 branch     = 1;
                 aluctrl    = `ALU_SUB;
-                sel_srcB   = 0;
+                sel_srcB   = 1;
                 sel_regdst = 0;
                 sel_reg_wdata = 0;
             end
-            `INST_LW    : ;
-            `INST_SW    : ;
+            `INST_LW    : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch     = 0;
+                aluctrl    = `ALU_ADD;
+                sel_srcB   = 1;
+                sel_regdst = 0;
+                sel_reg_wdata = 1;
+            end
+            `INST_SW    : begin
+                reg_wen    = 0;
+                mem_wen    = 1;
+                branch     = 0;
+                aluctrl    = `ALU_ADD;
+                sel_srcB   = 1;
+                sel_regdst = 0;
+                sel_reg_wdata = 0;
+            end
             `INST_J     : ;
             `INST_JAL   : ;
             endcase

@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module ctrl_regE(
-    input wire clk,
+    input wire clk, en,
     input wire reg_wen, mem_wen, branch,
     input wire[2:0] aluctrl,
     input wire sel_reg_wdata, sel_srcB, sel_regdst,
@@ -22,13 +22,23 @@ module ctrl_regE(
     end
     
     always @ (posedge clk) begin
-        reg_wenE <= reg_wen;
-        mem_wenE <= mem_wen;
-        branchE  <= branch;
-        aluctrlE <= aluctrl;
-        sel_reg_wdataE <= sel_reg_wdata;
-        sel_srcBE  <= sel_srcB;
-        sel_regdstE    <= sel_regdst;
+        if (en) begin
+            reg_wenE <= 0;
+            mem_wenE <= 0;
+            branchE  <= 0;
+            aluctrlE <= 0;
+            sel_reg_wdataE <= 0;
+            sel_srcBE <= 0;
+            sel_regdstE <= 0;
+        end else begin
+            reg_wenE <= reg_wen;
+            mem_wenE <= mem_wen;
+            branchE  <= branch;
+            aluctrlE <= aluctrl;
+            sel_reg_wdataE <= sel_reg_wdata;
+            sel_srcBE  <= sel_srcB;
+            sel_regdstE <= sel_regdst;
+        end
     end
     
 endmodule
