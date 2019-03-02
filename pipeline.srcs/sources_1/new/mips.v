@@ -346,7 +346,7 @@ module mips(
         .reg_wenW(reg_wenW),
         .rs(rs),
         .rt(rt),
-        .sel_reg_wdata(sel_reg_wdataE),
+        .sel_reg_wdataE(sel_reg_wdataE),
         .sel_forward_rs(sel_forward_rs),
         .sel_forward_rt(sel_forward_rt),
         .stallF(stallF),

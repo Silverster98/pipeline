@@ -17,7 +17,7 @@ module regfile(
     assign rs1o = (rs1 == 5'b00000) ? 32'h00000000 : gpr[rs1];
     assign rs2o = (rs2 == 5'b00000) ? 32'h00000000 : gpr[rs2];
     
-    always @ (wdata) begin
+    always @ (negedge clk) begin
         if (wen) gpr[rd] <= wdata;
     end
 endmodule
