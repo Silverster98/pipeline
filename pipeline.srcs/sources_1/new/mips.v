@@ -8,7 +8,7 @@ module mips(
     wire[31:0] npc, pc;
     wire[31:0] im_out, inst;
     wire[31:0] pc_plus4;
-    wire stallF, stallD, flushE;
+    wire stallF, stallD, flushD, flushE, flushM;
     
     wire[5:0] op;
     wire[4:0] rs, rt, rd;
@@ -91,16 +91,18 @@ module mips(
         .C(pc_plus4)
     );
     
-    myreg_en ir(
+    myreg_en_clear ir(
         .clk(clk),
         .en(!stallD),
+        .clear(flushD),
         .in32(im_out),
         .out32(inst)
     );
     
-    myreg_en pc4_regD(
+    myreg_en_clear pc4_regD(
         .clk(clk),
         .en(!stallD),
+        .clear(flushD),
         .in32(pc_plus4),
         .out32(pc_plus4D)
     );
@@ -181,7 +183,7 @@ module mips(
     
     ctrl_regE mips_ctrl_regE(
         .clk(clk),
-        .en(flushE),
+        .clear(flushE),
         .reg_wen(reg_wen),
         .mem_wen(mem_wen),
         .branch(branch),
@@ -240,7 +242,7 @@ module mips(
         .beqout(beqout)
     );
     
-    assign left32 = {extimm16[29:0], 2'b00};
+    assign left32 = {extimm16E[29:0], 2'b00};
     
     adder32 pc4_plus_imm(
         .A(left32),
@@ -280,6 +282,7 @@ module mips(
     
     ctrl_regM mips_ctrl_regM(
         .clk(clk),
+        .clear(flushM),
         .reg_wen(reg_wenE),
         .mem_wen(mem_wenE),
         .branch(branchE),
@@ -347,11 +350,14 @@ module mips(
         .rs(rs),
         .rt(rt),
         .sel_reg_wdataE(sel_reg_wdataE),
+        .sel_branch(sel_branch),
         .sel_forward_rs(sel_forward_rs),
         .sel_forward_rt(sel_forward_rt),
         .stallF(stallF),
         .stallD(stallD),
-        .flushE(flushE)
+        .flushD(flushD),
+        .flushE(flushE),
+        .flushM(flushM)
     );
   
 endmodule

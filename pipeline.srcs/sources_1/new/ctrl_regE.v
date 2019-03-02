@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module ctrl_regE(
-    input wire clk, en,
+    input wire clk, clear,
     input wire reg_wen, mem_wen, branch,
     input wire[2:0] aluctrl,
     input wire sel_reg_wdata, sel_srcB, sel_regdst,
@@ -22,7 +22,7 @@ module ctrl_regE(
     end
     
     always @ (posedge clk) begin
-        if (en) begin
+        if (clear) begin
             reg_wenE <= 0;
             mem_wenE <= 0;
             branchE  <= 0;

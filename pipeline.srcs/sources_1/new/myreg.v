@@ -24,16 +24,18 @@ module myreg(
     end
 endmodule
 
-module myreg_en(
+module myreg_en_clear(
     input wire clk,
     input wire[31:0] in32,
     input wire en,
+    input wire clear,
     
     output reg[31:0] out32
     );
     
     always @ (posedge clk) begin
-        if (en) out32 <= in32;
+        if (clear) out32 <= 0;
+        else if (en) out32 <= in32;
         else out32 <= out32;
     end
 endmodule
