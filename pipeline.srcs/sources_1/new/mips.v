@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+`include "instruction.v"
 
 module mips(
     input wire clk,
@@ -23,15 +24,15 @@ module mips(
     wire[31:0] reg_rs1o, reg_rs2o;
     
     wire[31:0] A, B, C, srcA, srcB;
-    wire[4:0] rsE, rtE, rdE, wdstE, saE;
+    wire[4:0] rsE, rtE, rdE, wdstE, saE, opE, opM;
     wire sel_srcB, sel_regdst;
     wire[2:0] alu_ctrl;
-    wire beqout;
+    wire beqout, bgtzout;
     wire[31:0] left32, pc_plus4E, pc_branch;
     wire sel_aluout;
     wire[31:0] aluout;
     
-    wire beqoutM;
+    wire beqoutM, bgtzoutM;
     wire[31:0] aluoutM, wdataM, pc_branchM;
     wire[4:0] wdstM;
     wire sel_branch;
@@ -141,6 +142,12 @@ module mips(
         .clk(clk),
         .in32(reg_rs2o),
         .out32(B)
+    );
+    
+    myreg6 op_reg(
+        .clk(clk),
+        .in6(op),
+        .out6(opE)
     );
     
     myreg5 rs_reg(
@@ -255,7 +262,8 @@ module mips(
         .alu_ctrl(alu_ctrlE),
         .sa(saE),
         .C(C),
-        .beqout(beqout)
+        .beqout(beqout),
+        .bgtzout(bgtzout)
     );
     
     assign left32 = {extimm16E[29:0], 2'b00};
@@ -270,6 +278,12 @@ module mips(
         .clk(clk),
         .in(beqout),
         .out(beqoutM)
+    );
+    
+    myreg1 bgtzout_regM(
+        .clk(clk),
+        .in(bgtzout),
+        .out(bgtzoutM)
     );
     
     mux32_2 mux_aluout(
@@ -303,6 +317,12 @@ module mips(
         .out32(pc_branchM)
     );
     
+    myreg6 op_regE(
+        .clk(clk),
+        .in6(opE),
+        .out6(opM)
+    );
+    
     ctrl_regM mips_ctrl_regM(
         .clk(clk),
         .clear(flushM),
@@ -317,8 +337,13 @@ module mips(
     );
     
     /**************** next is memary access part ****************/
+    wire bgtz_op;
+    wire beq_branch, bgtz_branch;
+    assign beq_branch = branchM && beqoutM;
+    assign bgtz_op = (opM == `INST_BGTZ) ? 1 : 0;
+    assign bgtz_branch = bgtz_op && bgtzoutM;
+    assign sel_branch = beq_branch || bgtz_branch;
     
-    assign sel_branch = branchM & beqoutM;
     
     dm mips_dm(
         .clk(clk),

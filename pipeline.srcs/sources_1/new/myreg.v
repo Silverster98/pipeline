@@ -33,6 +33,10 @@ module myreg_en_clear(
     output reg[31:0] out32
     );
     
+    initial begin
+        out32 <= 0;
+    end
+    
     always @ (posedge clk) begin
         if (clear) out32 <= 0;
         else if (en) out32 <= in32;
@@ -49,5 +53,21 @@ module myreg5(
     
     always @ (posedge clk) begin
         out5 <= in5;
+    end
+endmodule
+
+module myreg6(
+    input wire clk,
+    input wire[5:0] in6,
+    
+    output reg[5:0] out6
+    );
+    
+    initial begin
+        out6 <= 0;
+    end
+    
+    always @ (posedge clk) begin
+        out6 <= in6;
     end
 endmodule

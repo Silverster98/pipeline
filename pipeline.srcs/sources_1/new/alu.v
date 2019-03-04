@@ -8,12 +8,13 @@ module alu(
     input wire[4:0] sa,
     
     output wire[31:0] C,
-    output wire beqout
+    output wire beqout,bgtzout
     );
     
     reg[32:0] temp;
     assign C = temp[31:0];
     assign beqout = (temp == 0) ? 1'b1 : 1'b0;
+    assign bgtzout = (temp > 0) ? 1'b1 : 1'b0;
     
     always @ (*) begin
         case (alu_ctrl)
