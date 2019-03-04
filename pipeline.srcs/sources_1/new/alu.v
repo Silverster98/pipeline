@@ -21,6 +21,8 @@ module alu(
             `ALU_SUB : temp <= {A[31], A} - {B[31], B};
             `ALU_AND : temp <= {A[31], A} & {B[31], B};
             `ALU_OR  : temp <= {A[31], A} | {B[31], B};
+            `ALU_NOR : temp <= ({A[31], A} | {B[31], B}) ^ 33'h1ffffffff;
+            `ALU_XOR : temp <= {A[31], A} ^ {B[31], B};
             `ALU_SL  : temp <= {B[31], B} << sa;
             `ALU_SR  : temp <= {B[31], B} >> sa;
             default  : temp <= {A[31], A};

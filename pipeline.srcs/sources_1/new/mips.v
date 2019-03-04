@@ -16,7 +16,7 @@ module mips(
     wire[5:0] funct;
     wire[15:0] imm16;
     wire[25:0] imm26;
-    wire[31:0] extimm16, extimm16E;
+    wire[31:0] extimm16, extimm16E, upperimm16, upperimm16E;
     wire[31:0] pc_plus4D;
     wire reg_wen;
     wire[31:0] reg_wdata;
@@ -28,6 +28,8 @@ module mips(
     wire[2:0] alu_ctrl;
     wire beqout;
     wire[31:0] left32, pc_plus4E, pc_branch;
+    wire sel_aluout;
+    wire[31:0] aluout;
     
     wire beqoutM;
     wire[31:0] aluoutM, wdataM, pc_branchM;
@@ -43,7 +45,7 @@ module mips(
                                     
     wire reg_wenE, mem_wenE, branchE; 
     wire[2:0] alu_ctrlE;
-    wire sel_reg_wdataE, sel_srcBE, sel_regdstE;
+    wire sel_aluoutE, sel_reg_wdataE, sel_srcBE, sel_regdstE;
     wire reg_wenM, mem_wenM, branchM, sel_reg_wdataM;
     wire reg_wenW, sel_reg_wdataW;
     
@@ -58,6 +60,7 @@ module mips(
         .mem_wen(mem_wen),
         .branch(branch),
         .aluctrl(alu_ctrl),
+        .sel_aluout(sel_aluout),
         .sel_reg_wdata(sel_reg_wdata),
         .sel_srcB(sel_srcB),
         .sel_regdst(sel_regdst)
@@ -169,10 +172,21 @@ module mips(
         .out32(extimm16)
     );
     
+    load_upper load_upper_imm16(
+        .imm16(imm16),
+        .out32(upperimm16)
+    );
+    
     myreg extimm16_reg(
         .clk(clk),
         .in32(extimm16),
         .out32(extimm16E)
+    );
+    
+    myreg upperimm16_reg(
+        .clk(clk),
+        .in32(upperimm16),
+        .out32(upperimm16E)
     );
     
     myreg pc4_regE(
@@ -188,6 +202,7 @@ module mips(
         .mem_wen(mem_wen),
         .branch(branch),
         .aluctrl(alu_ctrl),
+        .sel_aluout(sel_aluout),
         .sel_reg_wdata(sel_reg_wdata),
         .sel_srcB(sel_srcB),
         .sel_regdst(sel_regdst),
@@ -195,6 +210,7 @@ module mips(
         .mem_wenE(mem_wenE),
         .branchE(branchE),
         .aluctrlE(alu_ctrlE),
+        .sel_aluoutE(sel_aluoutE),
         .sel_reg_wdataE(sel_reg_wdataE),
         .sel_srcBE(sel_srcBE),
         .sel_regdstE(sel_regdstE)
@@ -256,9 +272,16 @@ module mips(
         .out(beqoutM)
     );
     
+    mux32_2 mux_aluout(
+        .in1(C),
+        .in2(upperimm16E),
+        .sel(sel_aluoutE),
+        .out(aluout)
+    );
+    
     myreg c_regM(
         .clk(clk),
-        .in32(C),
+        .in32(aluout),
         .out32(aluoutM)
     );
     

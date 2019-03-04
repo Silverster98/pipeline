@@ -7,7 +7,7 @@ module cu(
     
     output reg reg_wen, mem_wen, branch,
     output reg[2:0] aluctrl,
-    output reg sel_reg_wdata, sel_srcB, sel_regdst
+    output reg sel_aluout, sel_reg_wdata, sel_srcB, sel_regdst
     );
     
     initial begin
@@ -15,6 +15,7 @@ module cu(
         mem_wen    = 0;
         branch     = 0;
         aluctrl    = `ALU_ADD;
+        sel_aluout = 0;
         sel_srcB   = 0;
         sel_regdst = 0;
         sel_reg_wdata = 0;
@@ -31,6 +32,17 @@ module cu(
                 mem_wen    = 0;
                 branch     = 0;
                 aluctrl    = `ALU_ADD;
+                sel_aluout = 0;
+                sel_srcB   = 0;
+                sel_regdst = 1;
+                sel_reg_wdata = 0;
+            end
+            `INST_ADDU : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch     = 0;
+                aluctrl    = `ALU_ADD;
+                sel_aluout = 0;
                 sel_srcB   = 0;
                 sel_regdst = 1;
                 sel_reg_wdata = 0;
@@ -40,16 +52,48 @@ module cu(
                 mem_wen    = 0;
                 branch     = 0;
                 aluctrl    = `ALU_SUB;
+                sel_aluout = 0;
                 sel_srcB   = 0;
                 sel_regdst = 1;
                 sel_reg_wdata = 0;
             end
-            `INST_SLT : ;
+            `INST_SUBU : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch     = 0;
+                aluctrl    = `ALU_SUB;
+                sel_aluout = 0;
+                sel_srcB   = 0;
+                sel_regdst = 1;
+                sel_reg_wdata = 0;
+            end
+            `INST_SLT : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch     = 0;
+                aluctrl    = `ALU_SUB;
+                sel_aluout = 0;
+                sel_srcB   = 0;
+                sel_regdst = 1;
+                sel_reg_wdata = 0; // need change
+            end
+            `INST_SLTU : ;
+            `INST_NOR : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch     = 0;
+                aluctrl    = `ALU_NOR;
+                sel_aluout = 0;
+                sel_srcB   = 0;
+                sel_regdst = 1;
+                sel_reg_wdata = 0;
+            end
             `INST_OR  : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
                 branch     = 0;
                 aluctrl    = `ALU_OR;
+                sel_aluout = 0;
                 sel_srcB   = 0;
                 sel_regdst = 1;
                 sel_reg_wdata = 0;
@@ -59,6 +103,17 @@ module cu(
                 mem_wen    = 0;
                 branch     = 0;
                 aluctrl    = `ALU_AND;
+                sel_aluout = 0;
+                sel_srcB   = 0;
+                sel_regdst = 1;
+                sel_reg_wdata = 0;
+            end
+            `INST_XOR : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch     = 0;
+                aluctrl    = `ALU_XOR;
+                sel_aluout = 0;
                 sel_srcB   = 0;
                 sel_regdst = 1;
                 sel_reg_wdata = 0;
@@ -68,15 +123,20 @@ module cu(
                 mem_wen    = 0;
                 branch     = 0;
                 aluctrl    = `ALU_SL;
+                sel_aluout = 0;
                 sel_srcB   = 0;
                 sel_regdst = 1;
                 sel_reg_wdata = 0;
             end
+            `INST_SLLV : ;
+            `INST_SRA : ;
+            `INST_SRAV : ;
             `INST_SRL : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
                 branch     = 0;
                 aluctrl    = `ALU_SR;
+                sel_aluout = 0;
                 sel_srcB   = 0;
                 sel_regdst = 1;
                 sel_reg_wdata = 0;
@@ -89,6 +149,7 @@ module cu(
                 mem_wen    = 0;
                 branch     = 0;
                 aluctrl    = `ALU_ADD;
+                sel_aluout = 0;
                 sel_srcB   = 1;
                 sel_regdst = 0;
                 sel_reg_wdata = 0;
@@ -98,6 +159,29 @@ module cu(
                 mem_wen    = 0;
                 branch     = 0;
                 aluctrl    = `ALU_ADD;
+                sel_aluout = 0;
+                sel_srcB   = 1;
+                sel_regdst = 0;
+                sel_reg_wdata = 0;
+            end
+            `INST_SLTI : ;
+            `INST_SLTIU : ;
+            `INST_ANDI : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch     = 0;
+                aluctrl    = `ALU_AND;
+                sel_aluout = 0;
+                sel_srcB   = 1;
+                sel_regdst = 0;
+                sel_reg_wdata = 0;
+            end
+            `INST_LUI : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch     = 0;
+                aluctrl    = `ALU_AND;
+                sel_aluout = 1;
                 sel_srcB   = 1;
                 sel_regdst = 0;
                 sel_reg_wdata = 0;
@@ -107,6 +191,17 @@ module cu(
                 mem_wen    = 0;
                 branch     = 0;
                 aluctrl    = `ALU_OR;
+                sel_aluout = 0;
+                sel_srcB   = 1;
+                sel_regdst = 0;
+                sel_reg_wdata = 0;
+            end
+            `INST_XORI : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch     = 0;
+                aluctrl    = `ALU_XOR;
+                sel_aluout = 0;
                 sel_srcB   = 1;
                 sel_regdst = 0;
                 sel_reg_wdata = 0;
@@ -116,30 +211,51 @@ module cu(
                 mem_wen    = 0;
                 branch     = 1;
                 aluctrl    = `ALU_SUB;
+                sel_aluout = 0;
                 sel_srcB   = 0;
                 sel_regdst = 0;
                 sel_reg_wdata = 0;
             end
+            `INST_BNE : ;
+            `INST_REGIMM : begin
+                
+            end
+            `INST_BGTZ : ;
+            `INST_BLEZ : ;
+            `INST_LB : ;
             `INST_LW    : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
                 branch     = 0;
                 aluctrl    = `ALU_ADD;
+                sel_aluout = 0;
                 sel_srcB   = 1;
                 sel_regdst = 0;
                 sel_reg_wdata = 1;
             end
+            `INST_SB : ;
             `INST_SW    : begin
                 reg_wen    = 0;
                 mem_wen    = 1;
                 branch     = 0;
                 aluctrl    = `ALU_ADD;
+                sel_aluout = 0;
                 sel_srcB   = 1;
                 sel_regdst = 0;
                 sel_reg_wdata = 0;
             end
             `INST_J     : ;
             `INST_JAL   : ;
+            default : begin
+                reg_wen    = 0;
+                mem_wen    = 0;
+                branch     = 0;
+                aluctrl    = `ALU_ADD;
+                sel_aluout = 0;
+                sel_srcB   = 0;
+                sel_regdst = 0;
+                sel_reg_wdata = 0;
+            end
             endcase
         end
     end
