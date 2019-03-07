@@ -263,7 +263,8 @@ module cu(
                 sel_regdst = 0;
                 sel_reg_wdata = 0;
             end
-            `INST_JAL   : ;
+            `INST_JAL   : begin
+            end
             default : begin
                 reg_wen    = 0;
                 mem_wen    = 0;
