@@ -253,7 +253,16 @@ module cu(
                 sel_regdst = 0;
                 sel_reg_wdata = 0;
             end
-            `INST_J     : ;
+            `INST_J     : begin
+                reg_wen    = 0;
+                mem_wen    = 0;
+                branch     = 0;
+                aluctrl    = `ALU_ADD;
+                sel_aluout = 0;
+                sel_srcB   = 0;
+                sel_regdst = 0;
+                sel_reg_wdata = 0;
+            end
             `INST_JAL   : ;
             default : begin
                 reg_wen    = 0;

@@ -10,6 +10,8 @@ module mips(
     wire[31:0] im_out, inst;
     wire[31:0] pc_plus4;
     wire stallF, stallD, flushD, flushE, flushM;
+    wire flush, Jflush;
+    wire[31:0] jpc;
     
     wire[5:0] op;
     wire[4:0] rs, rt, rd;
@@ -18,6 +20,7 @@ module mips(
     wire[15:0] imm16;
     wire[25:0] imm26;
     wire[31:0] extimm16, extimm16E, upperimm16, upperimm16E;
+    wire[31:0] extimm26;
     wire[31:0] pc_plus4D;
     wire reg_wen;
     wire[31:0] reg_wdata;
@@ -68,8 +71,15 @@ module mips(
     );
     
     /**************** next is inst fetch part ****************/
-    mux32_2 mux_npc(
+    mux32_2 mux_jpc(
         .in1(pc_plus4),
+        .in2(extimm26),
+        .sel(Jflush),
+        .out(jpc)
+    );
+    
+    mux32_2 mux_npc(
+        .in1(jpc),
         .in2(pc_branchM),
         .sel(sel_branch),
         .out(npc)
@@ -95,10 +105,12 @@ module mips(
         .C(pc_plus4)
     );
     
+    assign flush = flushD | Jflush;
+    
     myreg_en_clear ir(
         .clk(clk),
         .en(!stallD),
-        .clear(flushD),
+        .clear(flush),
         .in32(im_out),
         .out32(inst)
     );
@@ -112,6 +124,7 @@ module mips(
     );
     
     /**************** next is inst decode part ****************/
+    assign Jflush = (op == `INST_J) ? 1 : 0;
     assign op = inst[31:26];
     assign rs = inst[25:21];
     assign rt = inst[20:16];
@@ -177,6 +190,11 @@ module mips(
     extend_imm16 ext_imm16(
         .imm16(imm16),
         .out32(extimm16)
+    );
+    
+    extend_imm26 ext_imm26(
+        .imm26(imm26),
+        .out32(extimm26)
     );
     
     load_upper load_upper_imm16(
