@@ -95,10 +95,14 @@ module mips(
         .pc(pc)
     );
     
-    im mips_im(
-        .pc(pc[11:2]),
-        .inst(im_out)
+    rom mips_im(
+        .a(pc[11:2]),      // input wire [9 : 0] a
+        .spo(im_out)  // output wire [31 : 0] spo
     );
+//    im mips_im(
+//        .pc(pc[11:2]),
+//        .inst(im_out)
+//    );
     
     adder32 pc_plus4_adder(
         .A(pc),
@@ -365,14 +369,21 @@ module mips(
     assign bgtz_branch = bgtz_op && bgtzoutM;
     assign sel_branch = beq_branch || bgtz_branch;
     
-    
-    dm mips_dm(
-        .clk(clk),
-        .addr(aluoutM),
-        .wen(mem_wenM),
-        .wdata(wdataM),
-        .out(memout)
+    ram mips_dm(
+      .a(aluoutM[9:2]),      // input wire [7 : 0] a
+      .d(wdataM),      // input wire [31 : 0] d
+      .clk(clk),  // input wire clk
+      .we(mem_wenM),    // input wire we
+      .spo(memout)  // output wire [31 : 0] spo
     );
+    
+//    dm mips_dm(
+//        .clk(clk),
+//        .addr(aluoutM),
+//        .wen(mem_wenM),
+//        .wdata(wdataM),
+//        .out(memout)
+//    );
     
     myreg aluout_regW(
         .clk(clk),
