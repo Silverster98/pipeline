@@ -58,6 +58,7 @@ module mips(
     
     /**************** mips control unit ****************/
     cu mips_cu(
+        .rst(rst),
         .op(op),
         .funct(funct),
         .reg_wen(reg_wen),
@@ -221,6 +222,7 @@ module mips(
     );
     
     ctrl_regE mips_ctrl_regE(
+        .rst(rst),
         .clk(clk),
         .clear(flushE),
         .reg_wen(reg_wen),
@@ -342,6 +344,7 @@ module mips(
     );
     
     ctrl_regM mips_ctrl_regM(
+        .rst(rst),
         .clk(clk),
         .clear(flushM),
         .reg_wen(reg_wenE),
@@ -390,6 +393,7 @@ module mips(
     );
     
     ctrl_regW mips_ctrl_regW(
+        .rst(rst),
         .clk(clk),
         .reg_wen(reg_wenM),
         .sel_reg_wdata(sel_reg_wdataM),

@@ -26,7 +26,7 @@
     `define INST_SRL    6'b000010 // srl
     `define INST_SRLV   6'b000110 // srlv
     
-    // branch
+    // jump
     `define INST_JR     6'b001000 // jr
     `define INST_JALR   6'b001001 // jalr
     
@@ -77,7 +77,7 @@
 
 
 /******************** type J **********************/
-// branch
+// jump
 `define INST_J          6'b000010 // j
 `define INST_JAL        6'b000011 // jal
 

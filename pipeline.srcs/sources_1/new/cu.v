@@ -2,6 +2,7 @@
 `include "instruction.v"
 
 module cu(
+    input wire rst,
     input wire[5:0] op,
     input wire[5:0] funct,
     
@@ -10,22 +11,20 @@ module cu(
     output reg sel_aluout, sel_reg_wdata, sel_srcB, sel_regdst
     );
     
-    initial begin
-        reg_wen    = 0;
-        mem_wen    = 0;
-        branch     = 0;
-        aluctrl    = `ALU_ADD;
-        sel_aluout = 0;
-        sel_srcB   = 0;
-        sel_regdst = 0;
-        sel_reg_wdata = 0;
-    end
-    
     wire Rtype;
     assign Rtype = (op == `INST_TYPE_R) ? 1 : 0;
     
     always @ (*) begin
-        if (Rtype) begin
+        if (rst == 1) begin
+            reg_wen    = 0;
+            mem_wen    = 0;
+            branch     = 0;
+            aluctrl    = `ALU_ADD;
+            sel_aluout = 0;
+            sel_srcB   = 0;
+            sel_regdst = 0;
+            sel_reg_wdata = 0;
+        end else if (Rtype) begin
             case (funct)
             `INST_ADD : begin
                 reg_wen    = 1;
