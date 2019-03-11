@@ -3,7 +3,9 @@
 
 module mips(
     input wire clk,
-    input wire rst
+    input wire rst,
+    input wire io_en,
+    output wire[7:0] io_out
     );
     
     wire[31:0] npc, pc;
@@ -113,6 +115,7 @@ module mips(
     assign flush = flushD | Jflush;
     
     myreg_en_clear ir(
+        .rst(rst),
         .clk(clk),
         .en(!stallD),
         .clear(flush),
@@ -121,6 +124,7 @@ module mips(
     );
     
     myreg_en_clear pc4_regD(
+        .rst(0),
         .clk(clk),
         .en(!stallD),
         .clear(flushD),
@@ -139,6 +143,9 @@ module mips(
     assign imm16 = inst[15:0];
     assign imm26 = inst[25:0];
     
+    wire[31:0] t3;
+    assign io_out = (io_en == 1) ? t3[7:0] : 8'h00;
+    
     regfile mips_regfile(
         .clk(clk),
         .rs1(rs),
@@ -147,12 +154,15 @@ module mips(
         .wen(reg_wenW),
         .wdata(reg_wdata),
         .rs1o(reg_rs1o),
-        .rs2o(reg_rs2o)
+        .rs2o(reg_rs2o),
+        .t3(t3)
     );
     
-    myreg A_reg(
+    myreg_en_clear A_reg(
         .clk(clk),
         .in32(reg_rs1o),
+        .en(1),
+        .clear(flushE),
         .out32(A)
     );
     

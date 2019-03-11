@@ -25,6 +25,7 @@ module myreg(
 endmodule
 
 module myreg_en_clear(
+    input wire rst,
     input wire clk,
     input wire[31:0] in32,
     input wire en,
@@ -32,13 +33,10 @@ module myreg_en_clear(
     
     output reg[31:0] out32
     );
-    
-    initial begin
-        out32 <= 0;
-    end
+    wire set_zero = clear || rst;
     
     always @ (posedge clk) begin
-        if (clear) out32 <= 0;
+        if (set_zero) out32 <= 0;
         else if (en) out32 <= in32;
         else out32 <= out32;
     end

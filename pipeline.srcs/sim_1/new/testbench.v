@@ -1,8 +1,9 @@
 `timescale 1ns / 1ps
 
 module testbench();
+    wire[7:0] out;
     reg clk, rst;
-    mips mips_core(clk, rst);
+    mips mips_core(clk, rst, 1, out);
     
     initial begin
 //        $readmemh("/home/silvester/project/pipeline/inst.txt", mips_core.mips_im.im);
