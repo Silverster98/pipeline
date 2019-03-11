@@ -5,9 +5,10 @@ module conflict_detect(
     input wire reg_wenM, reg_wenW,
     input wire[4:0] rs, rt,
     input wire sel_reg_wdataE,
+    input wire sel_branch,
     
     output wire[1:0] sel_forward_rs, sel_forward_rt,
-    output wire stallD, stallF, flushE
+    output wire stallD, stallF, flushD, flushE, flushM
     );
     
     // forward
@@ -23,5 +24,7 @@ module conflict_detect(
     assign lwstall = ((rs == rtE || rt == rtE) && sel_reg_wdataE);
     assign stallD = lwstall;
     assign stallF = lwstall;
-    assign flushE = lwstall;
+    assign flushE = (sel_branch == 1) ? 1 :lwstall;
+    assign flushM = (sel_branch == 1) ? 1 : 0;
+    assign flushD = (sel_branch == 1) ? 1 : 0;
 endmodule

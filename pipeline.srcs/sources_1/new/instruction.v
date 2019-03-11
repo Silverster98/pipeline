@@ -26,7 +26,7 @@
     `define INST_SRL    6'b000010 // srl
     `define INST_SRLV   6'b000110 // srlv
     
-    // branch
+    // jump
     `define INST_JR     6'b001000 // jr
     `define INST_JALR   6'b001001 // jalr
     
@@ -77,7 +77,7 @@
 
 
 /******************** type J **********************/
-// branch
+// jump
 `define INST_J          6'b000010 // j
 `define INST_JAL        6'b000011 // jal
 
@@ -94,5 +94,7 @@
 `define ALU_SUB   3'b001
 `define ALU_AND   3'b010
 `define ALU_OR    3'b011
+`define ALU_NOR   3'b110
+`define ALU_XOR   3'b111
 `define ALU_SL    3'b100
 `define ALU_SR    3'b101

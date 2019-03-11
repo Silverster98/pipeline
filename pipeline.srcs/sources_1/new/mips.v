@@ -1,14 +1,19 @@
 `timescale 1ns / 1ps
+`include "instruction.v"
 
 module mips(
     input wire clk,
-    input wire rst
+    input wire rst,
+    input wire io_en,
+    output wire[7:0] io_out
     );
     
     wire[31:0] npc, pc;
     wire[31:0] im_out, inst;
     wire[31:0] pc_plus4;
-    wire stallF, stallD, flushE;
+    wire stallF, stallD, flushD, flushE, flushM;
+    wire flush, Jflush;
+    wire[31:0] jpc;
     
     wire[5:0] op;
     wire[4:0] rs, rt, rd;
@@ -16,20 +21,23 @@ module mips(
     wire[5:0] funct;
     wire[15:0] imm16;
     wire[25:0] imm26;
-    wire[31:0] extimm16, extimm16E;
+    wire[31:0] extimm16, extimm16E, upperimm16, upperimm16E;
+    wire[31:0] extimm26;
     wire[31:0] pc_plus4D;
     wire reg_wen;
     wire[31:0] reg_wdata;
     wire[31:0] reg_rs1o, reg_rs2o;
     
     wire[31:0] A, B, C, srcA, srcB;
-    wire[4:0] rsE, rtE, rdE, wdstE, saE;
+    wire[4:0] rsE, rtE, rdE, wdstE, saE, opE, opM;
     wire sel_srcB, sel_regdst;
     wire[2:0] alu_ctrl;
-    wire beqout;
+    wire beqout, bgtzout;
     wire[31:0] left32, pc_plus4E, pc_branch;
+    wire sel_aluout;
+    wire[31:0] aluout;
     
-    wire beqoutM;
+    wire beqoutM, bgtzoutM;
     wire[31:0] aluoutM, wdataM, pc_branchM;
     wire[4:0] wdstM;
     wire sel_branch;
@@ -43,7 +51,7 @@ module mips(
                                     
     wire reg_wenE, mem_wenE, branchE; 
     wire[2:0] alu_ctrlE;
-    wire sel_reg_wdataE, sel_srcBE, sel_regdstE;
+    wire sel_aluoutE, sel_reg_wdataE, sel_srcBE, sel_regdstE;
     wire reg_wenM, mem_wenM, branchM, sel_reg_wdataM;
     wire reg_wenW, sel_reg_wdataW;
     
@@ -52,20 +60,29 @@ module mips(
     
     /**************** mips control unit ****************/
     cu mips_cu(
+        .rst(rst),
         .op(op),
         .funct(funct),
         .reg_wen(reg_wen),
         .mem_wen(mem_wen),
         .branch(branch),
         .aluctrl(alu_ctrl),
+        .sel_aluout(sel_aluout),
         .sel_reg_wdata(sel_reg_wdata),
         .sel_srcB(sel_srcB),
         .sel_regdst(sel_regdst)
     );
     
     /**************** next is inst fetch part ****************/
-    mux32_2 mux_npc(
+    mux32_2 mux_jpc(
         .in1(pc_plus4),
+        .in2(extimm26),
+        .sel(Jflush),
+        .out(jpc)
+    );
+    
+    mux32_2 mux_npc(
+        .in1(jpc),
         .in2(pc_branchM),
         .sel(sel_branch),
         .out(npc)
@@ -80,10 +97,15 @@ module mips(
         .pc(pc)
     );
     
-    im mips_im(
-        .pc(pc[11:2]),
-        .inst(im_out)
+    rom mips_im(
+        .a(pc[11:2]),      // input wire [9 : 0] a
+        .spo(im_out)  // output wire [31 : 0] spo
     );
+    
+//    im mips_im(
+//        .pc(pc[11:2]),
+//        .inst(im_out)
+//    );
     
     adder32 pc_plus4_adder(
         .A(pc),
@@ -91,21 +113,28 @@ module mips(
         .C(pc_plus4)
     );
     
-    myreg_en ir(
+    assign flush = flushD | Jflush;
+    
+    myreg_en_clear ir(
+        .rst(rst),
         .clk(clk),
         .en(!stallD),
+        .clear(flush),
         .in32(im_out),
         .out32(inst)
     );
     
-    myreg_en pc4_regD(
+    myreg_en_clear pc4_regD(
+        .rst(0),
         .clk(clk),
         .en(!stallD),
+        .clear(flush),
         .in32(pc_plus4),
         .out32(pc_plus4D)
     );
     
     /**************** next is inst decode part ****************/
+    assign Jflush = (op == `INST_J) ? 1 : 0;
     assign op = inst[31:26];
     assign rs = inst[25:21];
     assign rt = inst[20:16];
@@ -115,6 +144,9 @@ module mips(
     assign imm16 = inst[15:0];
     assign imm26 = inst[25:0];
     
+    wire[31:0] t3;
+    assign io_out = (io_en == 1) ? t3[7:0] : 8'h00;
+    
     regfile mips_regfile(
         .clk(clk),
         .rs1(rs),
@@ -123,43 +155,8 @@ module mips(
         .wen(reg_wenW),
         .wdata(reg_wdata),
         .rs1o(reg_rs1o),
-        .rs2o(reg_rs2o)
-    );
-    
-    myreg A_reg(
-        .clk(clk),
-        .in32(reg_rs1o),
-        .out32(A)
-    );
-    
-    myreg B_reg(
-        .clk(clk),
-        .in32(reg_rs2o),
-        .out32(B)
-    );
-    
-    myreg5 rs_reg(
-        .clk(clk),
-        .in5(rs),
-        .out5(rsE)
-    );
-    
-    myreg5 rt_reg(
-        .clk(clk),
-        .in5(rt),
-        .out5(rtE)
-    );
-    
-    myreg5 rd_reg(
-        .clk(clk),
-        .in5(rd),
-        .out5(rdE)
-    );
-    
-    myreg5 sa_reg(
-        .clk(clk),
-        .in5(sa),
-        .out5(saE)
+        .rs2o(reg_rs2o),
+        .t3(t3)
     );
     
     extend_imm16 ext_imm16(
@@ -167,25 +164,52 @@ module mips(
         .out32(extimm16)
     );
     
-    myreg extimm16_reg(
-        .clk(clk),
-        .in32(extimm16),
-        .out32(extimm16E)
+    extend_imm26 ext_imm26(
+        .imm26(imm26),
+        .out32(extimm26)
     );
     
-    myreg pc4_regE(
+    load_upper load_upper_imm16(
+        .imm16(imm16),
+        .out32(upperimm16)
+    );
+    
+    regE mips_regE(
+        .rst(rst),
         .clk(clk),
-        .in32(pc_plus4D),
-        .out32(pc_plus4E)
+        .clear(flushE),
+        .en(1),
+        .in_A(reg_rs1o),
+        .in_B(reg_rs2o),
+        .in_op(op),
+        .in_rs(rs),
+        .in_rt(rt),
+        .in_rd(rd),
+        .in_sa(sa),
+        .in_extimm16(extimm16),
+        .in_upperimm16(upperimm16),
+        .in_pc_plus4(pc_plus4D),
+        .out_A(A),
+        .out_B(B),
+        .out_op(opE),
+        .out_rs(rsE),
+        .out_rt(rtE),
+        .out_rd(rdE),
+        .out_sa(saE),
+        .out_extimm16(extimm16E),
+        .out_upperimm16(upperimm16E),
+        .out_pc_plus4(pc_plus4E)
     );
     
     ctrl_regE mips_ctrl_regE(
+        .rst(rst),
         .clk(clk),
-        .en(flushE),
+        .clear(flushE),
         .reg_wen(reg_wen),
         .mem_wen(mem_wen),
         .branch(branch),
         .aluctrl(alu_ctrl),
+        .sel_aluout(sel_aluout),
         .sel_reg_wdata(sel_reg_wdata),
         .sel_srcB(sel_srcB),
         .sel_regdst(sel_regdst),
@@ -193,6 +217,7 @@ module mips(
         .mem_wenE(mem_wenE),
         .branchE(branchE),
         .aluctrlE(alu_ctrlE),
+        .sel_aluoutE(sel_aluoutE),
         .sel_reg_wdataE(sel_reg_wdataE),
         .sel_srcBE(sel_srcBE),
         .sel_regdstE(sel_regdstE)
@@ -237,10 +262,11 @@ module mips(
         .alu_ctrl(alu_ctrlE),
         .sa(saE),
         .C(C),
-        .beqout(beqout)
+        .beqout(beqout),
+        .bgtzout(bgtzout)
     );
     
-    assign left32 = {extimm16[29:0], 2'b00};
+    assign left32 = {extimm16E[29:0], 2'b00};
     
     adder32 pc4_plus_imm(
         .A(left32),
@@ -248,38 +274,38 @@ module mips(
         .C(pc_branch)
     );
     
-    myreg1 beqout_regM(
-        .clk(clk),
-        .in(beqout),
-        .out(beqoutM)
+    mux32_2 mux_aluout(
+        .in1(C),
+        .in2(upperimm16E),
+        .sel(sel_aluoutE),
+        .out(aluout)
     );
     
-    myreg c_regM(
+    regM mips_regM(
+        .rst(rst),
         .clk(clk),
-        .in32(C),
-        .out32(aluoutM)
-    );
-    
-    myreg wdata_regM(
-        .clk(clk),
-        .in32(B),
-        .out32(wdataM)
-    );
-    
-    myreg5 wdst_regM(
-        .clk(clk),
-        .in5(wdstE),
-        .out5(wdstM)
-    );
-    
-    myreg pc_branch_regM(
-        .clk(clk),
-        .in32(pc_branch),
-        .out32(pc_branchM)
+        .clear(0),
+        .en(1),
+        .in_beqout(beqout),
+        .in_bgtzout(bgtzout),
+        .in_aluout(aluout),
+        .in_wdata_mem(forward_B),
+        .in_wdst(wdstE),
+        .in_pc_branch(pc_branch),
+        .in_op(opE),
+        .out_beqout(beqoutM),
+        .out_bgtzout(bgtzoutM),
+        .out_aluout(aluoutM),
+        .out_wdata_mem(wdataM),
+        .out_wdst(wdstM),
+        .out_pc_branch(pc_branchM),
+        .out_op(opM)
     );
     
     ctrl_regM mips_ctrl_regM(
+        .rst(rst),
         .clk(clk),
+        .clear(flushM),
         .reg_wen(reg_wenE),
         .mem_wen(mem_wenE),
         .branch(branchE),
@@ -291,36 +317,44 @@ module mips(
     );
     
     /**************** next is memary access part ****************/
+    wire bgtz_op;
+    wire beq_branch, bgtz_branch;
+    assign beq_branch = branchM && beqoutM;
+    assign bgtz_op = (opM == `INST_BGTZ) ? 1 : 0;
+    assign bgtz_branch = bgtz_op && bgtzoutM;
+    assign sel_branch = beq_branch || bgtz_branch;
     
-    assign sel_branch = branchM & beqoutM;
-    
-    dm mips_dm(
-        .clk(clk),
-        .addr(aluoutM),
-        .wen(mem_wenM),
-        .wdata(wdataM),
-        .out(memout)
+    ram mips_dm(
+      .a(aluoutM[9:2]),      // input wire [7 : 0] a
+      .d(wdataM),      // input wire [31 : 0] d
+      .clk(clk),  // input wire clk
+      .we(mem_wenM),    // input wire we
+      .spo(memout)  // output wire [31 : 0] spo
     );
     
-    myreg aluout_regW(
+//    dm mips_dm(
+//        .clk(clk),
+//        .addr(aluoutM),
+//        .wen(mem_wenM),
+//        .wdata(wdataM),
+//        .out(memout)
+//    );
+
+    regW mips_regW(
+        .rst(rst),
         .clk(clk),
-        .in32(aluoutM),
-        .out32(aluoutW)
-    );
-    
-    myreg memoutM(
-        .clk(clk),
-        .in32(memout),
-        .out32(memoutW)
-    );
-    
-    myreg5 wdst_regW(
-        .clk(clk),
-        .in5(wdstM),
-        .out5(wdstW)
+        .clear(0),
+        .en(1),
+        .in_aluout(aluoutM),
+        .in_memout(memout),
+        .in_wdst(wdstM),
+        .out_aluout(aluoutW),
+        .out_memout(memoutW),
+        .out_wdst(wdstW)
     );
     
     ctrl_regW mips_ctrl_regW(
+        .rst(rst),
         .clk(clk),
         .reg_wen(reg_wenM),
         .sel_reg_wdata(sel_reg_wdataM),
@@ -347,11 +381,14 @@ module mips(
         .rs(rs),
         .rt(rt),
         .sel_reg_wdataE(sel_reg_wdataE),
+        .sel_branch(sel_branch),
         .sel_forward_rs(sel_forward_rs),
         .sel_forward_rt(sel_forward_rt),
         .stallF(stallF),
         .stallD(stallD),
-        .flushE(flushE)
+        .flushD(flushD),
+        .flushE(flushE),
+        .flushM(flushM)
     );
   
 endmodule

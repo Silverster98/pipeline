@@ -8,12 +8,13 @@ module alu(
     input wire[4:0] sa,
     
     output wire[31:0] C,
-    output wire beqout
+    output wire beqout,bgtzout
     );
     
     reg[32:0] temp;
     assign C = temp[31:0];
     assign beqout = (temp == 0) ? 1'b1 : 1'b0;
+    assign bgtzout = (temp > 0) ? 1'b1 : 1'b0;
     
     always @ (*) begin
         case (alu_ctrl)
@@ -21,6 +22,8 @@ module alu(
             `ALU_SUB : temp <= {A[31], A} - {B[31], B};
             `ALU_AND : temp <= {A[31], A} & {B[31], B};
             `ALU_OR  : temp <= {A[31], A} | {B[31], B};
+            `ALU_NOR : temp <= ({A[31], A} | {B[31], B}) ^ 33'h1ffffffff;
+            `ALU_XOR : temp <= {A[31], A} ^ {B[31], B};
             `ALU_SL  : temp <= {B[31], B} << sa;
             `ALU_SR  : temp <= {B[31], B} >> sa;
             default  : temp <= {A[31], A};
