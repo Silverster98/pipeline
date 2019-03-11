@@ -101,6 +101,7 @@ module mips(
         .a(pc[11:2]),      // input wire [9 : 0] a
         .spo(im_out)  // output wire [31 : 0] spo
     );
+    
 //    im mips_im(
 //        .pc(pc[11:2]),
 //        .inst(im_out)
@@ -127,7 +128,7 @@ module mips(
         .rst(0),
         .clk(clk),
         .en(!stallD),
-        .clear(flushD),
+        .clear(flush),
         .in32(pc_plus4),
         .out32(pc_plus4D)
     );
@@ -158,50 +159,6 @@ module mips(
         .t3(t3)
     );
     
-    myreg_en_clear A_reg(
-        .clk(clk),
-        .in32(reg_rs1o),
-        .en(1),
-        .clear(flushE),
-        .out32(A)
-    );
-    
-    myreg B_reg(
-        .clk(clk),
-        .in32(reg_rs2o),
-        .out32(B)
-    );
-    
-    myreg6 op_reg(
-        .clk(clk),
-        .in6(op),
-        .out6(opE)
-    );
-    
-    myreg5 rs_reg(
-        .clk(clk),
-        .in5(rs),
-        .out5(rsE)
-    );
-    
-    myreg5 rt_reg(
-        .clk(clk),
-        .in5(rt),
-        .out5(rtE)
-    );
-    
-    myreg5 rd_reg(
-        .clk(clk),
-        .in5(rd),
-        .out5(rdE)
-    );
-    
-    myreg5 sa_reg(
-        .clk(clk),
-        .in5(sa),
-        .out5(saE)
-    );
-    
     extend_imm16 ext_imm16(
         .imm16(imm16),
         .out32(extimm16)
@@ -217,22 +174,31 @@ module mips(
         .out32(upperimm16)
     );
     
-    myreg extimm16_reg(
+    regE mips_regE(
+        .rst(rst),
         .clk(clk),
-        .in32(extimm16),
-        .out32(extimm16E)
-    );
-    
-    myreg upperimm16_reg(
-        .clk(clk),
-        .in32(upperimm16),
-        .out32(upperimm16E)
-    );
-    
-    myreg pc4_regE(
-        .clk(clk),
-        .in32(pc_plus4D),
-        .out32(pc_plus4E)
+        .clear(flushE),
+        .en(1),
+        .in_A(reg_rs1o),
+        .in_B(reg_rs2o),
+        .in_op(op),
+        .in_rs(rs),
+        .in_rt(rt),
+        .in_rd(rd),
+        .in_sa(sa),
+        .in_extimm16(extimm16),
+        .in_upperimm16(upperimm16),
+        .in_pc_plus4(pc_plus4D),
+        .out_A(A),
+        .out_B(B),
+        .out_op(opE),
+        .out_rs(rsE),
+        .out_rt(rtE),
+        .out_rd(rdE),
+        .out_sa(saE),
+        .out_extimm16(extimm16E),
+        .out_upperimm16(upperimm16E),
+        .out_pc_plus4(pc_plus4E)
     );
     
     ctrl_regE mips_ctrl_regE(
@@ -308,18 +274,6 @@ module mips(
         .C(pc_branch)
     );
     
-    myreg1 beqout_regM(
-        .clk(clk),
-        .in(beqout),
-        .out(beqoutM)
-    );
-    
-    myreg1 bgtzout_regM(
-        .clk(clk),
-        .in(bgtzout),
-        .out(bgtzoutM)
-    );
-    
     mux32_2 mux_aluout(
         .in1(C),
         .in2(upperimm16E),
@@ -327,34 +281,25 @@ module mips(
         .out(aluout)
     );
     
-    myreg c_regM(
+    regM mips_regM(
+        .rst(rst),
         .clk(clk),
-        .in32(aluout),
-        .out32(aluoutM)
-    );
-    
-    myreg wdata_regM(
-        .clk(clk),
-        .in32(B),
-        .out32(wdataM)
-    );
-    
-    myreg5 wdst_regM(
-        .clk(clk),
-        .in5(wdstE),
-        .out5(wdstM)
-    );
-    
-    myreg pc_branch_regM(
-        .clk(clk),
-        .in32(pc_branch),
-        .out32(pc_branchM)
-    );
-    
-    myreg6 op_regE(
-        .clk(clk),
-        .in6(opE),
-        .out6(opM)
+        .clear(0),
+        .en(1),
+        .in_beqout(beqout),
+        .in_bgtzout(bgtzout),
+        .in_aluout(aluout),
+        .in_wdata_mem(forward_B),
+        .in_wdst(wdstE),
+        .in_pc_branch(pc_branch),
+        .in_op(opE),
+        .out_beqout(beqoutM),
+        .out_bgtzout(bgtzoutM),
+        .out_aluout(aluoutM),
+        .out_wdata_mem(wdataM),
+        .out_wdst(wdstM),
+        .out_pc_branch(pc_branchM),
+        .out_op(opM)
     );
     
     ctrl_regM mips_ctrl_regM(
@@ -394,23 +339,18 @@ module mips(
 //        .wdata(wdataM),
 //        .out(memout)
 //    );
-    
-    myreg aluout_regW(
+
+    regW mips_regW(
+        .rst(rst),
         .clk(clk),
-        .in32(aluoutM),
-        .out32(aluoutW)
-    );
-    
-    myreg memoutM(
-        .clk(clk),
-        .in32(memout),
-        .out32(memoutW)
-    );
-    
-    myreg5 wdst_regW(
-        .clk(clk),
-        .in5(wdstM),
-        .out5(wdstW)
+        .clear(0),
+        .en(1),
+        .in_aluout(aluoutM),
+        .in_memout(memout),
+        .in_wdst(wdstM),
+        .out_aluout(aluoutW),
+        .out_memout(memoutW),
+        .out_wdst(wdstW)
     );
     
     ctrl_regW mips_ctrl_regW(

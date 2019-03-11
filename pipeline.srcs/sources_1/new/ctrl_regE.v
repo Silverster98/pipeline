@@ -12,21 +12,11 @@ module ctrl_regE(
     output reg sel_aluoutE, sel_reg_wdataE, sel_srcBE, sel_regdstE
     );
     
-    always @ (*) begin
-        if (rst) begin
-            reg_wenE <= 0;
-            mem_wenE <= 0;
-            branchE  <= 0;
-            aluctrlE <= 0;
-            sel_aluoutE <= 0;
-            sel_reg_wdataE <= 0;
-            sel_srcBE <= 0;
-            sel_regdstE <= 0;
-        end
-    end
+    wire set_zero;
+    assign set_zero = rst || clear;
     
     always @ (posedge clk) begin
-        if (clear) begin
+        if (set_zero) begin
             reg_wenE <= 0;
             mem_wenE <= 0;
             branchE  <= 0;
