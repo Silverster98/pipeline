@@ -30,11 +30,11 @@ module mips(
     
     wire[31:0] A, B, C, srcA, srcB;
     wire[4:0] rsE, rtE, rdE, wdstE, saE, opE, opM;
-    wire sel_srcB, sel_regdst;
+    wire sel_srcB;
     wire[2:0] alu_ctrl;
     wire beqout, bgtzout;
     wire[31:0] left32, pc_plus4E, pc_branch;
-    wire sel_aluout;
+    wire[1:0] sel_aluout, sel_regdst;
     wire[31:0] aluout;
     
     wire beqoutM, bgtzoutM;
@@ -51,12 +51,16 @@ module mips(
                                     
     wire reg_wenE, mem_wenE, branchE; 
     wire[2:0] alu_ctrlE;
-    wire sel_aluoutE, sel_reg_wdataE, sel_srcBE, sel_regdstE;
+    wire[1:0] sel_aluoutE, sel_regdstE;
+    wire sel_reg_wdataE, sel_srcBE;
     wire reg_wenM, mem_wenM, branchM, sel_reg_wdataM;
     wire reg_wenW, sel_reg_wdataW;
     
     wire[1:0] sel_forward_rs, sel_forward_rt;
     wire[31:0] forward_B;
+    
+    wire[31:0] bool;
+    wire sel_bool;
     
     /**************** mips control unit ****************/
     cu mips_cu(
@@ -249,9 +253,10 @@ module mips(
         .out(srcB)
     );
     
-    mux5_2 mux_regdst(
+    mux5_4 mux_regdst(
         .in1(rtE),
         .in2(rdE),
+        .in3(5'b11111),
         .sel(sel_regdstE),
         .out(wdstE)
     );
@@ -266,6 +271,14 @@ module mips(
         .bgtzout(bgtzout)
     );
     
+    assign sel_bool = (C < 0) ? 1'b1 : 0;
+    mux32_2 mux_bool(
+        .in1(32'h00000000),
+        .in2(32'h00000001),
+        .sel(sel_bool),
+        .out(bool)
+    );
+    
     assign left32 = {extimm16E[29:0], 2'b00};
     
     adder32 pc4_plus_imm(
@@ -274,9 +287,11 @@ module mips(
         .C(pc_branch)
     );
     
-    mux32_2 mux_aluout(
+    mux32_4 mux_aluout(
         .in1(C),
         .in2(upperimm16E),
+        .in3(bool),
+        .in4(pc_plus4E),
         .sel(sel_aluoutE),
         .out(aluout)
     );
