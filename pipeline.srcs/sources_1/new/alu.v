@@ -1,4 +1,5 @@
 `include "instruction.v"
+`include "ctrl_def.v"
 `timescale 1ns / 1ps
 
 module alu(

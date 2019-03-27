@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 `include "instruction.v"
+`include "ctrl_def.v"
 
 module cu(
     input wire rst,
@@ -7,7 +8,7 @@ module cu(
     input wire[5:0] funct,
     
     output reg reg_wen, mem_wen, branch,
-    output reg[2:0] aluctrl,
+    output reg[`ALU_CTRL-1:0] aluctrl,
     output reg[1:0] sel_aluout, sel_regdst,
     output reg sel_reg_wdata, sel_srcB
     );
