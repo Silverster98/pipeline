@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 `include "instruction.v"
+`include "ctrl_def.v"
 
 module mips(
     input wire clk,
@@ -37,12 +38,12 @@ module mips(
     wire[4:0] rsE, rtE, rdE, wdstE, saE, opE, opM;
     wire sel_srcB;
     wire[2:0] alu_ctrl;
-    wire beqout, bgtzout;
+    wire[1:0] ans_status;
     wire[31:0] left32, pc_plus4E, pc_branch;
     wire[1:0] sel_aluout, sel_regdst;
     wire[31:0] aluout;
     
-    wire beqoutM, bgtzoutM;
+    wire[1:0] ans_statusM;
     wire[31:0] aluoutM, wdataM, pc_branchM;
     wire[4:0] wdstM;
     wire sel_branch;
@@ -51,14 +52,14 @@ module mips(
     wire[31:0] memout, memoutW, aluoutW;
     wire[4:0] wdstW;
     wire sel_reg_wdata;
-    
-    wire branch;
+
+    wire[`BRANCH_TYPE_WIDTH-1:0] branch_type, branch_typeE, branch_typeM;
                                     
-    wire reg_wenE, mem_wenE, branchE; 
+    wire reg_wenE, mem_wenE; 
     wire[2:0] alu_ctrlE;
     wire[1:0] sel_aluoutE, sel_regdstE;
     wire sel_reg_wdataE, sel_srcBE;
-    wire reg_wenM, mem_wenM, branchM, sel_reg_wdataM;
+    wire reg_wenM, mem_wenM, sel_reg_wdataM;
     wire reg_wenW, sel_reg_wdataW;
     
     wire[1:0] sel_forward_rs, sel_forward_rt;
@@ -74,7 +75,7 @@ module mips(
         .funct(funct),
         .reg_wen(reg_wen),
         .mem_wen(mem_wen),
-        .branch(branch),
+        .branch_type(branch_type),
         .aluctrl(alu_ctrl),
         .sel_aluout(sel_aluout),
         .sel_reg_wdata(sel_reg_wdata),
@@ -204,7 +205,7 @@ module mips(
         .clear(flushE),
         .reg_wen(reg_wen),
         .mem_wen(mem_wen),
-        .branch(branch),
+        .branch_type(branch_type),
         .aluctrl(alu_ctrl),
         .sel_aluout(sel_aluout),
         .sel_reg_wdata(sel_reg_wdata),
@@ -212,7 +213,7 @@ module mips(
         .sel_regdst(sel_regdst),
         .reg_wenE(reg_wenE),
         .mem_wenE(mem_wenE),
-        .branchE(branchE),
+        .branch_typeE(branch_typeE),
         .aluctrlE(alu_ctrlE),
         .sel_aluoutE(sel_aluoutE),
         .sel_reg_wdataE(sel_reg_wdataE),
@@ -260,8 +261,7 @@ module mips(
         .alu_ctrl(alu_ctrlE),
         .sa(saE),
         .C(C),
-        .beqout(beqout),
-        .bgtzout(bgtzout)
+        .ans_status(ans_status)
     );
     
     assign sel_bool = (C < 0) ? 1'b1 : 0;
@@ -294,15 +294,13 @@ module mips(
         .clk(clk),
         .clear(0),
         .en(1),
-        .in_beqout(beqout),
-        .in_bgtzout(bgtzout),
+        .in_ans_status(ans_status),
         .in_aluout(aluout),
         .in_wdata_mem(forward_B),
         .in_wdst(wdstE),
         .in_pc_branch(pc_branch),
         .in_op(opE),
-        .out_beqout(beqoutM),
-        .out_bgtzout(bgtzoutM),
+        .out_ans_status(ans_statusM),
         .out_aluout(aluoutM),
         .out_wdata_mem(wdataM),
         .out_wdst(wdstM),
@@ -316,20 +314,19 @@ module mips(
         .clear(flushM),
         .reg_wen(reg_wenE),
         .mem_wen(mem_wenE),
-        .branch(branchE),
+        .branch_type(branch_typeE),
         .sel_reg_wdata(sel_reg_wdataE),
         .reg_wenM(reg_wenM),
         .mem_wenM(mem_wenM),
-        .branchM(branchM),
+        .branch_typeM(branch_typeM),
         .sel_reg_wdataM(sel_reg_wdataM)
     );
     
     /**************** next is memary access part ****************/
-    wire bgtz_op;
     wire beq_branch, bgtz_branch;
-    assign beq_branch = branchM && beqoutM;
-    assign bgtz_op = (opM == `INST_BGTZ) ? 1 : 0;
-    assign bgtz_branch = bgtz_op && bgtzoutM;
+    assign beq_branch = (branch_typeM == `BRANCH_BEQ) && (ans_statusM == `ANS_EZ);
+    assign bgtz_branch = (branch_typeM == `BRANCH_BGTZ) && (ans_statusM == `ANS_GZ);
+
     assign sel_branch = beq_branch || bgtz_branch;
     
     assign ram_addr = aluoutM;

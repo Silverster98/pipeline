@@ -7,7 +7,8 @@ module cu(
     input wire[5:0] op,
     input wire[5:0] funct,
     
-    output reg reg_wen, mem_wen, branch,
+    output reg reg_wen, mem_wen,
+    output reg[`BRANCH_TYPE_WIDTH-1:0] branch_type,
     output reg[`ALU_CTRL-1:0] aluctrl,
     output reg[1:0] sel_aluout, sel_regdst,
     output reg sel_reg_wdata, sel_srcB
@@ -20,7 +21,7 @@ module cu(
         if (rst == 1) begin
             reg_wen    = 0;
             mem_wen    = 0;
-            branch     = 0;
+            branch_type = `BRANCH_NONE;
             aluctrl    = `ALU_ADD;
             sel_aluout = 2'b00;
             sel_srcB   = 0;
@@ -31,7 +32,7 @@ module cu(
             `INST_ADD : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = 2'b00;
                 sel_srcB   = 0;
@@ -41,7 +42,7 @@ module cu(
             `INST_ADDU : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = 2'b00;
                 sel_srcB   = 0;
@@ -51,7 +52,7 @@ module cu(
             `INST_SUB : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_SUB;
                 sel_aluout = 2'b00;
                 sel_srcB   = 0;
@@ -61,7 +62,7 @@ module cu(
             `INST_SUBU : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_SUB;
                 sel_aluout = 2'b00;
                 sel_srcB   = 0;
@@ -71,7 +72,7 @@ module cu(
             `INST_SLT : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_SUB;
                 sel_aluout = 2'b10;
                 sel_srcB   = 0;
@@ -81,7 +82,7 @@ module cu(
             `INST_SLTU : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_SUB;
                 sel_aluout = 2'b10;
                 sel_srcB   = 0;
@@ -91,7 +92,7 @@ module cu(
             `INST_NOR : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_NOR;
                 sel_aluout = 2'b00;
                 sel_srcB   = 0;
@@ -101,7 +102,7 @@ module cu(
             `INST_OR  : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_OR;
                 sel_aluout = 2'b00;
                 sel_srcB   = 0;
@@ -111,7 +112,7 @@ module cu(
             `INST_AND : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_AND;
                 sel_aluout = 2'b00;
                 sel_srcB   = 0;
@@ -121,7 +122,7 @@ module cu(
             `INST_XOR : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_XOR;
                 sel_aluout = 2'b00;
                 sel_srcB   = 0;
@@ -131,7 +132,7 @@ module cu(
             `INST_SLL : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_SL;
                 sel_aluout = 2'b00;
                 sel_srcB   = 0;
@@ -144,7 +145,7 @@ module cu(
             `INST_SRL : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_SR;
                 sel_aluout = 2'b00;
                 sel_srcB   = 0;
@@ -157,7 +158,7 @@ module cu(
             `INST_ADDIU : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = 2'b00;
                 sel_srcB   = 1;
@@ -167,7 +168,7 @@ module cu(
             `INST_ADDI  : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = 2'b00;
                 sel_srcB   = 1;
@@ -177,7 +178,7 @@ module cu(
             `INST_SLTI : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_SUB;
                 sel_aluout = 2'b10;
                 sel_srcB   = 1;
@@ -187,7 +188,7 @@ module cu(
             `INST_SLTIU : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_SUB;
                 sel_aluout = 2'b10;
                 sel_srcB   = 1;
@@ -197,7 +198,7 @@ module cu(
             `INST_ANDI : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_AND;
                 sel_aluout = 2'b00;
                 sel_srcB   = 1;
@@ -207,7 +208,7 @@ module cu(
             `INST_LUI : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_AND;
                 sel_aluout = 2'b01;
                 sel_srcB   = 1;
@@ -217,7 +218,7 @@ module cu(
             `INST_ORI   : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_OR;
                 sel_aluout = 2'b00;
                 sel_srcB   = 1;
@@ -227,7 +228,7 @@ module cu(
             `INST_XORI : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_XOR;
                 sel_aluout = 2'b00;
                 sel_srcB   = 1;
@@ -237,7 +238,7 @@ module cu(
             `INST_BEQ   : begin
                 reg_wen    = 0;
                 mem_wen    = 0;
-                branch     = 1;
+                branch_type = `BRANCH_BEQ;
                 aluctrl    = `ALU_SUB;
                 sel_aluout = 2'b00;
                 sel_srcB   = 0;
@@ -251,7 +252,7 @@ module cu(
             `INST_BGTZ : begin
                 reg_wen    = 0;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_BGTZ;
                 aluctrl    = `ALU_SUB;
                 sel_aluout = 2'b00;
                 sel_srcB   = 0;
@@ -263,7 +264,7 @@ module cu(
             `INST_LW    : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = 2'b00;
                 sel_srcB   = 1;
@@ -274,7 +275,7 @@ module cu(
             `INST_SW    : begin
                 reg_wen    = 0;
                 mem_wen    = 1;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = 2'b00;
                 sel_srcB   = 1;
@@ -284,7 +285,7 @@ module cu(
             `INST_J     : begin
                 reg_wen    = 0;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = 2'b00;
                 sel_srcB   = 0;
@@ -294,7 +295,7 @@ module cu(
             `INST_JAL   : begin
                 reg_wen    = 0;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = 2'b11;
                 sel_srcB   = 0;
@@ -304,7 +305,7 @@ module cu(
             default : begin
                 reg_wen    = 0;
                 mem_wen    = 0;
-                branch     = 0;
+                branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = 2'b00;
                 sel_srcB   = 0;
