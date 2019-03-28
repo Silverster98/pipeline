@@ -9,13 +9,11 @@ module regfile(
     input wire[31:0] wdata,
     
     output wire[31:0] rs1o,
-    output wire[31:0] rs2o,
-    output wire[31:0] t3
+    output wire[31:0] rs2o
     );
     
     reg[31:0] gpr[31:0];
     
-    assign t3 = gpr[11];
     assign rs1o = (rs1 == 5'b00000) ? 32'h00000000 : gpr[rs1];
     assign rs2o = (rs2 == 5'b00000) ? 32'h00000000 : gpr[rs2];
     

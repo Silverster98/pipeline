@@ -4,8 +4,13 @@
 module mips(
     input wire clk,
     input wire rst,
-    input wire io_en,
-    output wire[7:0] io_out
+    input wire[31:0] inst_in,
+    input wire[31:0] ram_in,
+    
+    output wire[31:0] pc_out,
+    output wire[31:0] ram_addr,
+    output wire[31:0] ram_wdata,
+    output wire       ram_wen
     );
     
     wire[31:0] npc, pc;
@@ -100,16 +105,7 @@ module mips(
         .npc(npc),
         .pc(pc)
     );
-    
-    rom mips_im(
-        .a(pc[11:2]),      // input wire [9 : 0] a
-        .spo(im_out)  // output wire [31 : 0] spo
-    );
-    
-//    im mips_im(
-//        .pc(pc[11:2]),
-//        .inst(im_out)
-//    );
+    assign pc_out = pc;
     
     adder32 pc_plus4_adder(
         .A(pc),
@@ -118,6 +114,7 @@ module mips(
     );
     
     assign flush = flushD | Jflush;
+    assign im_out = inst_in;
     
     myreg_en_clear ir(
         .rst(rst),
@@ -148,9 +145,6 @@ module mips(
     assign imm16 = inst[15:0];
     assign imm26 = inst[25:0];
     
-    wire[31:0] t3;
-    assign io_out = (io_en == 1) ? t3[7:0] : 8'h00;
-    
     regfile mips_regfile(
         .clk(clk),
         .rs1(rs),
@@ -159,8 +153,7 @@ module mips(
         .wen(reg_wenW),
         .wdata(reg_wdata),
         .rs1o(reg_rs1o),
-        .rs2o(reg_rs2o),
-        .t3(t3)
+        .rs2o(reg_rs2o)
     );
     
     extend_imm16 ext_imm16(
@@ -339,21 +332,10 @@ module mips(
     assign bgtz_branch = bgtz_op && bgtzoutM;
     assign sel_branch = beq_branch || bgtz_branch;
     
-    ram mips_dm(
-      .a(aluoutM[9:2]),      // input wire [7 : 0] a
-      .d(wdataM),      // input wire [31 : 0] d
-      .clk(clk),  // input wire clk
-      .we(mem_wenM),    // input wire we
-      .spo(memout)  // output wire [31 : 0] spo
-    );
-    
-//    dm mips_dm(
-//        .clk(clk),
-//        .addr(aluoutM),
-//        .wen(mem_wenM),
-//        .wdata(wdataM),
-//        .out(memout)
-//    );
+    assign ram_addr = aluoutM;
+    assign ram_wdata = wdataM;
+    assign ram_wen = mem_wenM;
+    assign memout = ram_in;
 
     regW mips_regW(
         .rst(rst),
