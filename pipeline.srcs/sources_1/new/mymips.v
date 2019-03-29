@@ -6,18 +6,18 @@ module mymips(
     );
     
     wire[31:0] inst_in, pc_out;
-    wire[31:0] ram_addr, ram_wdata, ram_in;
-    wire ram_wen;
+    wire[31:0] addr, wdata, data_in;
+    wire wen, ram_wen, io_wen;
     
     mips mips_core(
         .clk(clk),
         .rst(rst),
         .inst_in(inst_in),
-        .ram_in(ram_in),
+        .ram_in(data_in),
         .pc_out(pc_out),
-        .ram_addr(ram_addr),
-        .ram_wdata(ram_wdata),
-        .ram_wen(ram_wen)
+        .ram_addr(addr),
+        .ram_wdata(wdata),
+        .ram_wen(wen)
     );
     
     rom mips_rom(
@@ -25,11 +25,18 @@ module mymips(
         .spo(inst_in)
     );
     
+    mem_map mmap(
+        .addr_h4(addr[31:28]),
+        .wen(wen),
+        .ram_wen(ram_wen),
+        .io_wen(io_wen)
+    );
+    
     ram mips_ram(
-        .a(ram_addr[9:2]),      // input wire [7 : 0] a
-        .d(ram_wdata),      // input wire [31 : 0] d
+        .a(addr[9:2]),      // input wire [7 : 0] a
+        .d(wdata),      // input wire [31 : 0] d
         .clk(clk),  // input wire clk
         .we(ram_wen),    // input wire we
-        .spo(ram_in)  // output wire [31 : 0] spo
+        .spo(data_in)  // output wire [31 : 0] spo
     );
 endmodule
