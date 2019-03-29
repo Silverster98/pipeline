@@ -90,6 +90,16 @@ module cu(
                 sel_regdst = `SEL_REGDST_RD;
                 sel_reg_wdata = 0;
             end
+            `INST_AND : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch_type = `BRANCH_NONE;
+                aluctrl    = `ALU_AND;
+                sel_aluout = `SEL_ALUOUT_C;
+                sel_srcB   = 0;
+                sel_regdst = `SEL_REGDST_RD;
+                sel_reg_wdata = 0;
+            end
             `INST_NOR : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
@@ -105,16 +115,6 @@ module cu(
                 mem_wen    = 0;
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_OR;
-                sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 0;
-                sel_regdst = `SEL_REGDST_RD;
-                sel_reg_wdata = 0;
-            end
-            `INST_AND : begin
-                reg_wen    = 1;
-                mem_wen    = 0;
-                branch_type = `BRANCH_NONE;
-                aluctrl    = `ALU_AND;
                 sel_aluout = `SEL_ALUOUT_C;
                 sel_srcB   = 0;
                 sel_regdst = `SEL_REGDST_RD;
@@ -153,10 +153,20 @@ module cu(
                 sel_regdst = `SEL_REGDST_RD;
                 sel_reg_wdata = 0;
             end
+            `INST_SRLV : ;
+            
+            `INST_JR : ;
+            `INST_JALR : ;
+            `INST_MFHI : ;
+            `INST_MFLO : ;
+            `INST_MTHI : ;
+            `INST_MTLO : ;
+            `INST_BREAK : ;
+            `INST_SYSCALL : ;
             endcase
         end else begin
             case (op)
-            `INST_ADDIU : begin
+            `INST_ADDI  : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
                 branch_type = `BRANCH_NONE;
@@ -166,7 +176,7 @@ module cu(
                 sel_regdst = `SEL_REGDST_RT;
                 sel_reg_wdata = 0;
             end
-            `INST_ADDI  : begin
+            `INST_ADDIU : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
                 branch_type = `BRANCH_NONE;
@@ -262,6 +272,9 @@ module cu(
             end
             `INST_BLEZ : ;
             `INST_LB : ;
+            `INST_LBU : ;
+            `INST_LH : ;
+            `INST_LHU : ;
             `INST_LW    : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
@@ -273,6 +286,7 @@ module cu(
                 sel_reg_wdata = 1;
             end
             `INST_SB : ;
+            `INST_SH : ;
             `INST_SW    : begin
                 reg_wen    = 0;
                 mem_wen    = 1;
