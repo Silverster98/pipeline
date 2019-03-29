@@ -39,4 +39,12 @@ module mymips(
         .we(ram_wen),    // input wire we
         .spo(data_in)  // output wire [31 : 0] spo
     );
+    
+    io_port ioport(
+        .clk(clk),
+        .rst(rst),
+        .addr(addr[3:2]),
+        .wdata(wdata),
+        .wen(io_wen)
+    );
 endmodule
