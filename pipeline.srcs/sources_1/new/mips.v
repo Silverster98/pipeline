@@ -264,7 +264,7 @@ module mips(
         .ans_status(ans_status)
     );
     
-    assign sel_bool = (C < 0) ? 1'b1 : 0;
+    assign sel_bool = (ans_status == `ANS_LZ) ? 1 : 0;
     mux32_2 mux_bool(
         .in1(32'h00000000),
         .in2(32'h00000001),
