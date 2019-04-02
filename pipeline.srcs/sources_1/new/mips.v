@@ -35,7 +35,7 @@ module mips(
     wire[31:0] reg_rs1o, reg_rs2o;
     
     wire[31:0] A, B, C, srcA, srcB;
-    wire[4:0] rsE, rtE, rdE, wdstE, saE, opE, opM;
+    wire[4:0] rsE, rtE, rdE, wdstE, saE;
     wire sel_srcB;
     wire[2:0] alu_ctrl;
     wire[1:0] ans_status;
@@ -179,7 +179,6 @@ module mips(
         .en(1),
         .in_A(reg_rs1o),
         .in_B(reg_rs2o),
-        .in_op(op),
         .in_rs(rs),
         .in_rt(rt),
         .in_rd(rd),
@@ -189,7 +188,6 @@ module mips(
         .in_pc_plus4(pc_plus4D),
         .out_A(A),
         .out_B(B),
-        .out_op(opE),
         .out_rs(rsE),
         .out_rt(rtE),
         .out_rd(rdE),
@@ -299,13 +297,11 @@ module mips(
         .in_wdata_mem(forward_B),
         .in_wdst(wdstE),
         .in_pc_branch(pc_branch),
-        .in_op(opE),
         .out_ans_status(ans_statusM),
         .out_aluout(aluoutM),
         .out_wdata_mem(wdataM),
         .out_wdst(wdstM),
-        .out_pc_branch(pc_branchM),
-        .out_op(opM)
+        .out_pc_branch(pc_branchM)
     );
     
     ctrl_regM mips_ctrl_regM(
