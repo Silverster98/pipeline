@@ -11,7 +11,7 @@ module mips(
     output wire[31:0] pc_out,
     output wire[31:0] ram_addr,
     output wire[31:0] ram_wdata,
-    output wire       ram_wen
+    output wire[3:0]  ram_wsel
     );
     
     wire[31:0] npc, pc;
@@ -19,7 +19,7 @@ module mips(
     wire[31:0] pc_plus4;
     wire stallF, stallD, flushD, flushE, flushM;
     wire flush, Jflush;
-    wire[31:0] jpc;
+    wire[31:0] jpc, jaddr;
     
     wire[5:0] op;
     wire[4:0] rs, rt, rd;
@@ -36,8 +36,8 @@ module mips(
     
     wire[31:0] A, B, C, srcA, srcB;
     wire[4:0] rsE, rtE, rdE, wdstE, saE;
-    wire sel_srcB;
-    wire[2:0] alu_ctrl;
+    wire[`SEL_SRCB_WIDTH-1:0] sel_srcB;
+    wire[`ALU_CTRL-1:0] alu_ctrl;
     wire[1:0] ans_status;
     wire[31:0] left32, pc_plus4E, pc_branch;
     wire[1:0] sel_aluout, sel_regdst;
@@ -56,9 +56,10 @@ module mips(
     wire[`BRANCH_TYPE_WIDTH-1:0] branch_type, branch_typeE, branch_typeM;
                                     
     wire reg_wenE, mem_wenE; 
-    wire[2:0] alu_ctrlE;
+    wire[`ALU_CTRL-1:0] alu_ctrlE;
     wire[1:0] sel_aluoutE, sel_regdstE;
-    wire sel_reg_wdataE, sel_srcBE;
+    wire sel_reg_wdataE;
+    wire[`SEL_SRCB_WIDTH-1:0] sel_srcBE;
     wire reg_wenM, mem_wenM, sel_reg_wdataM;
     wire reg_wenW, sel_reg_wdataW;
     
@@ -67,6 +68,8 @@ module mips(
     
     wire[31:0] bool;
     wire sel_bool;
+    
+    wire[`MEM_TYPE_WIDTH-1:0] mem_type, mem_typeE, mem_typeM;
     
     /**************** mips control unit ****************/
     cu mips_cu(
@@ -80,13 +83,14 @@ module mips(
         .sel_aluout(sel_aluout),
         .sel_reg_wdata(sel_reg_wdata),
         .sel_srcB(sel_srcB),
+        .mem_type(mem_type),
         .sel_regdst(sel_regdst)
     );
     
     /**************** next is inst fetch part ****************/
     mux32_2 mux_jpc(
         .in1(pc_plus4),
-        .in2(extimm26),
+        .in2(jaddr),
         .sel(Jflush),
         .out(jpc)
     );
@@ -136,7 +140,7 @@ module mips(
     );
     
     /**************** next is inst decode part ****************/
-    assign Jflush = (op == `INST_J) ? 1 : 0;
+    assign Jflush = (op == `INST_J || op == `INST_JAL || (op == `INST_TYPE_R && (funct == `INST_JR || funct == `INST_JALR))) ? 1 : 0;
     assign op = inst[31:26];
     assign rs = inst[25:21];
     assign rt = inst[20:16];
@@ -165,6 +169,15 @@ module mips(
     extend_imm26 ext_imm26(
         .imm26(imm26),
         .out32(extimm26)
+    );
+    
+    wire sel_jaddr;
+    assign sel_jaddr = (op == `INST_J || op == `INST_JAL) ? 1 : 0;
+    mux32_2 mux_jaddr(
+        .in1(rs),
+        .in2(extimm26),
+        .sel(sel_jaddr),
+        .out(jaddr)
     );
     
     load_upper load_upper_imm16(
@@ -208,6 +221,7 @@ module mips(
         .sel_aluout(sel_aluout),
         .sel_reg_wdata(sel_reg_wdata),
         .sel_srcB(sel_srcB),
+        .mem_type(mem_type),
         .sel_regdst(sel_regdst),
         .reg_wenE(reg_wenE),
         .mem_wenE(mem_wenE),
@@ -216,6 +230,7 @@ module mips(
         .sel_aluoutE(sel_aluoutE),
         .sel_reg_wdataE(sel_reg_wdataE),
         .sel_srcBE(sel_srcBE),
+        .mem_typeE(mem_typeE),
         .sel_regdstE(sel_regdstE)
     );
     
@@ -238,9 +253,10 @@ module mips(
     );
     
     
-    mux32_2 mux_srcB(
+    mux32_4 mux_srcB(
         .in1(forward_B),
         .in2(extimm16E),
+        .in3(32'h00000000),
         .sel(sel_srcBE),
         .out(srcB)
     );
@@ -311,24 +327,42 @@ module mips(
         .reg_wen(reg_wenE),
         .mem_wen(mem_wenE),
         .branch_type(branch_typeE),
+        .mem_type(mem_typeE),
         .sel_reg_wdata(sel_reg_wdataE),
         .reg_wenM(reg_wenM),
         .mem_wenM(mem_wenM),
         .branch_typeM(branch_typeM),
+        .mem_typeM(mem_typeM),
         .sel_reg_wdataM(sel_reg_wdataM)
     );
     
     /**************** next is memary access part ****************/
-    wire beq_branch, bgtz_branch;
+    wire beq_branch, bgtz_branch, bne_branch, blez_branch, bgez_branch, bltz_branch;
     assign beq_branch = (branch_typeM == `BRANCH_BEQ) && (ans_statusM == `ANS_EZ);
+    assign bne_branch = (branch_typeM == `BRANCH_BNE) && (ans_status == `ANS_GZ || ans_status == `ANS_LZ);
     assign bgtz_branch = (branch_typeM == `BRANCH_BGTZ) && (ans_statusM == `ANS_GZ);
+    assign blez_branch = (branch_typeM == `BRANCH_BLEZ) && (ans_status == `ANS_EZ || ans_status == `ANS_LZ);
+    assign bgez_branch = (branch_typeM == `BRANCH_BGEZ) && (ans_status == `ANS_EZ || ans_status == `ANS_GZ);
+    assign bltz_branch = (branch_typeM == `BRANCH_BLTZ) && (ans_status == `ANS_LZ);
 
-    assign sel_branch = beq_branch || bgtz_branch;
+    assign sel_branch = beq_branch || bgtz_branch || bne_branch || blez_branch || bgez_branch || bltz_branch;
     
     assign ram_addr = aluoutM;
-    assign ram_wdata = wdataM;
-    assign ram_wen = mem_wenM;
-    assign memout = ram_in;
+//    assign ram_wdata = wdataM;
+//    assign ram_wen = mem_wenM;
+//    assign memout = ram_in;
+    
+    mem_module mips_mem_module(
+        .wen(mem_wenM),
+        .addrlow2(ram_addr[1:0]),
+        .mem_data_i(ram_in),
+        .mem_wdata_i(wdataM),
+        .mem_type(mem_typeM),
+        .mem_wsel(ram_wsel),
+        .mem_data_o(memout),
+        .mem_wdata_o(ram_wdata)
+    );
+    
 
     regW mips_regW(
         .rst(rst),

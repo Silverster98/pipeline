@@ -5,6 +5,7 @@
 module cu(
     input wire rst,
     input wire[5:0] op,
+    input wire[4:0] rt,
     input wire[5:0] funct,
     
     output reg reg_wen, mem_wen,
@@ -12,7 +13,9 @@ module cu(
     output reg[`ALU_CTRL-1:0] aluctrl,
     output reg[`SEL_ALUOUT_WIDTH-1:0] sel_aluout,
     output reg[`SEL_REGDST_WIDTH-1:0] sel_regdst,
-    output reg sel_reg_wdata, sel_srcB
+    output reg[`SEL_SRCB_WIDTH-1:0] sel_srcB,
+    output reg[`MEM_TYPE_WIDTH-1:0] mem_type,
+    output reg sel_reg_wdata
     );
     
     wire Rtype;
@@ -25,8 +28,9 @@ module cu(
             branch_type = `BRANCH_NONE;
             aluctrl    = `ALU_ADD;
             sel_aluout = `SEL_ALUOUT_C;
-            sel_srcB   = 0;
+            sel_srcB   = `SEL_SRCB_FORD;
             sel_regdst = `SEL_REGDST_RD;
+            mem_type   = `MEM_NONE;
             sel_reg_wdata = 0;
         end else if (Rtype) begin
             case (funct)
@@ -36,8 +40,9 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 0;
+                sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             `INST_ADDU : begin
@@ -46,8 +51,9 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 0;
+                sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             `INST_SUB : begin
@@ -56,8 +62,9 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_SUB;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 0;
+                sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             `INST_SUBU : begin
@@ -66,8 +73,9 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_SUB;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 0;
+                sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             `INST_SLT : begin
@@ -76,28 +84,35 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_SUB;
                 sel_aluout = `SEL_ALUOUT_BOOL;
-                sel_srcB   = 0;
+                sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
-            `INST_SLTU : begin
+            `INST_SLTU : begin // alu hasn't have unsigned execulate
                 reg_wen    = 1;
                 mem_wen    = 0;
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_SUB;
                 sel_aluout = `SEL_ALUOUT_BOOL;
-                sel_srcB   = 0;
+                sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
+            `INST_DIV : ;
+            `INST_DIVU : ;
+            `INST_MULT : ;
+            `INST_MULTU : ;
             `INST_AND : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_AND;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 0;
+                sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             `INST_NOR : begin
@@ -106,8 +121,9 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_NOR;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 0;
+                sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             `INST_OR  : begin
@@ -116,8 +132,9 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_OR;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 0;
+                sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             `INST_XOR : begin
@@ -126,8 +143,9 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_XOR;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 0;
+                sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             `INST_SLL : begin
@@ -136,27 +154,88 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_SL;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 0;
+                sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
-            `INST_SLLV : ;
-            `INST_SRA : ;
-            `INST_SRAV : ;
+            `INST_SLLV : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch_type = `BRANCH_NONE;
+                aluctrl    = `ALU_SLV;
+                sel_aluout = `SEL_ALUOUT_C;
+                sel_srcB   = `SEL_SRCB_FORD;
+                sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
+                sel_reg_wdata = 0;
+            end
+            `INST_SRA : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch_type = `BRANCH_NONE;
+                aluctrl    = `ALU_SRA;
+                sel_aluout = `SEL_ALUOUT_C;
+                sel_srcB   = `SEL_SRCB_FORD;
+                sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
+                sel_reg_wdata = 0;
+            end
+            `INST_SRAV : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch_type = `BRANCH_NONE;
+                aluctrl    = `ALU_SRAV;
+                sel_aluout = `SEL_ALUOUT_C;
+                sel_srcB   = `SEL_SRCB_FORD;
+                sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
+                sel_reg_wdata = 0;
+            end
             `INST_SRL : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_SR;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 0;
+                sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
-            `INST_SRLV : ;
-            
-            `INST_JR : ;
-            `INST_JALR : ;
+            `INST_SRLV : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch_type = `BRANCH_NONE;
+                aluctrl    = `ALU_SRV;
+                sel_aluout = `SEL_ALUOUT_C;
+                sel_srcB   = `SEL_SRCB_FORD;
+                sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
+                sel_reg_wdata = 0;
+            end
+            `INST_JR : begin
+                reg_wen    = 0;
+                mem_wen    = 0;
+                branch_type = `BRANCH_NONE;
+                aluctrl    = `ALU_ADD;
+                sel_aluout = `SEL_ALUOUT_C;
+                sel_srcB   = `SEL_SRCB_FORD;
+                sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_NONE;
+                sel_reg_wdata = 0;
+            end
+            `INST_JALR : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch_type = `BRANCH_NONE;
+                aluctrl    = `ALU_ADD;
+                sel_aluout = `SEL_ALUOUT_PC4;
+                sel_srcB   = `SEL_SRCB_FORD;
+                sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
+                sel_reg_wdata = 0;
+            end
             `INST_MFHI : ;
             `INST_MFLO : ;
             `INST_MTHI : ;
@@ -172,8 +251,9 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 1;
+                sel_srcB   = `SEL_SRCB_IMM;
                 sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             `INST_ADDIU : begin
@@ -182,8 +262,9 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 1;
+                sel_srcB   = `SEL_SRCB_IMM;
                 sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             `INST_SLTI : begin
@@ -192,8 +273,9 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_SUB;
                 sel_aluout = `SEL_ALUOUT_BOOL;
-                sel_srcB   = 1;
+                sel_srcB   = `SEL_SRCB_IMM;
                 sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             `INST_SLTIU : begin
@@ -202,8 +284,9 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_SUB;
                 sel_aluout = `SEL_ALUOUT_BOOL;
-                sel_srcB   = 1;
+                sel_srcB   = `SEL_SRCB_IMM;
                 sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             `INST_ANDI : begin
@@ -212,8 +295,9 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_AND;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 1;
+                sel_srcB   = `SEL_SRCB_IMM;
                 sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             `INST_LUI : begin
@@ -222,8 +306,9 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_AND;
                 sel_aluout = `SEL_ALUOUT_IMM;
-                sel_srcB   = 1;
+                sel_srcB   = `SEL_SRCB_IMM;
                 sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             `INST_ORI   : begin
@@ -232,8 +317,9 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_OR;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 1;
+                sel_srcB   = `SEL_SRCB_IMM;
                 sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             `INST_XORI : begin
@@ -242,8 +328,9 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_XOR;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 1;
+                sel_srcB   = `SEL_SRCB_IMM;
                 sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             `INST_BEQ   : begin
@@ -252,13 +339,69 @@ module cu(
                 branch_type = `BRANCH_BEQ;
                 aluctrl    = `ALU_SUB;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 0;
+                sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
-            `INST_BNE : ;
+            `INST_BNE : begin
+                reg_wen    = 0;
+                mem_wen    = 0;
+                branch_type = `BRANCH_BNE;
+                aluctrl    = `ALU_SUB;
+                sel_aluout = `SEL_ALUOUT_C;
+                sel_srcB   = `SEL_SRCB_FORD;
+                sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_NONE;
+                sel_reg_wdata = 0;
+            end
             `INST_REGIMM : begin
-                
+                case (rt)
+                `INST_BGEZ : begin
+                    reg_wen    = 0;
+                    mem_wen    = 0;
+                    branch_type = `BRANCH_BGEZ;
+                    aluctrl    = `ALU_SUB;
+                    sel_aluout = `SEL_ALUOUT_C;
+                    sel_srcB   = `SEL_SRCB_0;
+                    sel_regdst = `SEL_REGDST_RT;
+                    mem_type   = `MEM_NONE;
+                    sel_reg_wdata = 0;
+                end
+                `INST_BLTZ : begin
+                    reg_wen    = 0;
+                    mem_wen    = 0;
+                    branch_type = `BRANCH_BLTZ;
+                    aluctrl    = `ALU_SUB;
+                    sel_aluout = `SEL_ALUOUT_C;
+                    sel_srcB   = `SEL_SRCB_0;
+                    sel_regdst = `SEL_REGDST_RT;
+                    mem_type   = `MEM_NONE;
+                    sel_reg_wdata = 0;
+                end
+                `INST_BLTZAL : begin
+                    reg_wen    = 1;
+                    mem_wen    = 0;
+                    branch_type = `BRANCH_BLTZAL;
+                    aluctrl    = `ALU_SUB;
+                    sel_aluout = `SEL_ALUOUT_C; // can't use, C and PC4 are both needed
+                    sel_srcB   = `SEL_SRCB_0;
+                    sel_regdst = `SEL_REGDST_R31;
+                    mem_type   = `MEM_NONE;
+                    sel_reg_wdata = 0;
+                end
+                `INST_BGEZAL : begin
+                    reg_wen    = 1;
+                    mem_wen    = 0;
+                    branch_type = `BRANCH_BGEZAL;
+                    aluctrl    = `ALU_SUB;
+                    sel_aluout = `SEL_ALUOUT_C; // can't use, C and PC4 are both needed
+                    sel_srcB   = `SEL_SRCB_0;
+                    sel_regdst = `SEL_REGDST_R31;
+                    mem_type   = `MEM_NONE;
+                    sel_reg_wdata = 0;
+                end
+                endcase
             end
             `INST_BGTZ : begin
                 reg_wen    = 0;
@@ -266,35 +409,108 @@ module cu(
                 branch_type = `BRANCH_BGTZ;
                 aluctrl    = `ALU_SUB;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 0;
+                sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
-            `INST_BLEZ : ;
-            `INST_LB : ;
-            `INST_LBU : ;
-            `INST_LH : ;
-            `INST_LHU : ;
+            `INST_BLEZ : begin
+                reg_wen    = 0;
+                mem_wen    = 0;
+                branch_type = `BRANCH_BLEZ;
+                aluctrl    = `ALU_SUB;
+                sel_aluout = `SEL_ALUOUT_C;
+                sel_srcB   = `SEL_SRCB_FORD;
+                sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_NONE;
+                sel_reg_wdata = 0;
+            end
+            `INST_LB : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch_type = `BRANCH_NONE;
+                aluctrl    = `ALU_ADD;
+                sel_aluout = `SEL_ALUOUT_C;
+                sel_srcB   = `SEL_SRCB_IMM;
+                sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_LB;
+                sel_reg_wdata = 1;
+            end
+            `INST_LBU : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch_type = `BRANCH_NONE;
+                aluctrl    = `ALU_ADD;
+                sel_aluout = `SEL_ALUOUT_C;
+                sel_srcB   = `SEL_SRCB_IMM;
+                sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_LBU;
+                sel_reg_wdata = 1;
+            end
+            `INST_LH : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch_type = `BRANCH_NONE;
+                aluctrl    = `ALU_ADD;
+                sel_aluout = `SEL_ALUOUT_C;
+                sel_srcB   = `SEL_SRCB_IMM;
+                sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_LH;
+                sel_reg_wdata = 1;
+            end
+            `INST_LHU : begin
+                reg_wen    = 1;
+                mem_wen    = 0;
+                branch_type = `BRANCH_NONE;
+                aluctrl    = `ALU_ADD;
+                sel_aluout = `SEL_ALUOUT_C;
+                sel_srcB   = `SEL_SRCB_IMM;
+                sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_LHU;
+                sel_reg_wdata = 1;
+            end
             `INST_LW    : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 1;
+                sel_srcB   = `SEL_SRCB_IMM;
                 sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_LW;
                 sel_reg_wdata = 1;
             end
-            `INST_SB : ;
-            `INST_SH : ;
+            `INST_SB : begin
+                reg_wen    = 0;
+                mem_wen    = 1;
+                branch_type = `BRANCH_NONE;
+                aluctrl    = `ALU_ADD;
+                sel_aluout = `SEL_ALUOUT_C;
+                sel_srcB   = `SEL_SRCB_IMM;
+                sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_SB;
+                sel_reg_wdata = 0;
+            end
+            `INST_SH : begin
+                reg_wen    = 0;
+                mem_wen    = 1;
+                branch_type = `BRANCH_NONE;
+                aluctrl    = `ALU_ADD;
+                sel_aluout = `SEL_ALUOUT_C;
+                sel_srcB   = `SEL_SRCB_IMM;
+                sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_SH;
+                sel_reg_wdata = 0;
+            end
             `INST_SW    : begin
                 reg_wen    = 0;
                 mem_wen    = 1;
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 1;
+                sel_srcB   = `SEL_SRCB_IMM;
                 sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_SW;
                 sel_reg_wdata = 0;
             end
             `INST_J     : begin
@@ -303,18 +519,20 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 0;
+                sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_RT;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             `INST_JAL   : begin
-                reg_wen    = 0;
+                reg_wen    = 1;
                 mem_wen    = 0;
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = `SEL_ALUOUT_PC4;
-                sel_srcB   = 0;
+                sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_R31;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             default : begin
@@ -323,8 +541,9 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_ADD;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = 0;
+                sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_RD;
+                mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
             endcase

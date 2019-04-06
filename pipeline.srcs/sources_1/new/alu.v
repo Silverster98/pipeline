@@ -17,6 +17,8 @@ module alu(
     assign ans_status = (temp == 0) ? `ANS_EZ :
                         (temp > 0 ) ? `ANS_GZ :
                         `ANS_LZ;
+    wire[4:0] stemp;
+    assign stemp = (alu_ctrl == `ALU_SLV || alu_ctrl == `ALU_SRV || alu_ctrl == `ALU_SRAV) ? A[4:0] : sa;
     
     always @ (*) begin
         case (alu_ctrl)
@@ -26,8 +28,9 @@ module alu(
             `ALU_OR  : temp <= {A[31], A} | {B[31], B};
             `ALU_NOR : temp <= ({A[31], A} | {B[31], B}) ^ 33'h1ffffffff;
             `ALU_XOR : temp <= {A[31], A} ^ {B[31], B};
-            `ALU_SL  : temp <= {B[31], B} << sa;
-            `ALU_SR  : temp <= {B[31], B} >> sa;
+            `ALU_SL || `ALU_SLV : temp <= {B[31], B} << stemp;
+            `ALU_SR || `ALU_SRV : temp <= {B[31], B} >> stemp;
+            `ALU_SRA || `ALU_SRAV : temp <= ({{31{B[31]}}, 1'b0} << (~stemp)) | (B >> stemp); 
             default  : temp <= {A[31], A};
         endcase
     end
