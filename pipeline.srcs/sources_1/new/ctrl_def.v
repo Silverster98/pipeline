@@ -14,6 +14,7 @@
 `define ALU_SRV   4'b1001
 `define ALU_SRA   4'b1010
 `define ALU_SRAV  4'b1011
+`define ALU_SUBU  4'b1100
 
 `define ANS_GZ    2'b01
 `define ANS_EZ    2'b00

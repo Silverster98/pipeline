@@ -30,7 +30,8 @@ module alu(
             `ALU_XOR : temp <= {A[31], A} ^ {B[31], B};
             `ALU_SL || `ALU_SLV : temp <= {B[31], B} << stemp;
             `ALU_SR || `ALU_SRV : temp <= {B[31], B} >> stemp;
-            `ALU_SRA || `ALU_SRAV : temp <= ({{31{B[31]}}, 1'b0} << (~stemp)) | (B >> stemp); 
+            `ALU_SRA || `ALU_SRAV : temp <= ({{31{B[31]}}, 1'b0} << (~stemp)) | (B >> stemp);
+            `ALU_SUBU : temp <= {{1'b0}, A} - {{1'b0}, B};
             default  : temp <= {A[31], A};
         endcase
     end

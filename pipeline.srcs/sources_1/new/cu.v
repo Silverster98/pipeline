@@ -89,11 +89,11 @@ module cu(
                 mem_type   = `MEM_NONE;
                 sel_reg_wdata = 0;
             end
-            `INST_SLTU : begin // alu hasn't have unsigned execulate
+            `INST_SLTU : begin
                 reg_wen    = 1;
                 mem_wen    = 0;
                 branch_type = `BRANCH_NONE;
-                aluctrl    = `ALU_SUB;
+                aluctrl    = `ALU_SUBU;
                 sel_aluout = `SEL_ALUOUT_BOOL;
                 sel_srcB   = `SEL_SRCB_FORD;
                 sel_regdst = `SEL_REGDST_RD;
