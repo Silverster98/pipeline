@@ -18,7 +18,7 @@ module mips(
     wire[31:0] im_out, inst;
     wire[31:0] pc_plus4;
     wire stallF, stallD, flushD, flushE, flushM;
-    wire flush, Jflush;
+    wire flush;
     wire[31:0] jpc, jaddr;
     
     wire[5:0] op;
@@ -77,7 +77,7 @@ module mips(
     wire timer_int_o;
     wire cp0_wen, cp0_wenE, cp0_wenM, cp0_wenW;
     
-    
+    wire[1:0] sel_jaddr;
     
     
     /**************** mips control unit ****************/
@@ -100,10 +100,11 @@ module mips(
     );
     
     /**************** next is inst fetch part ****************/
-    mux32_2 mux_jpc(
+    mux32_4 mux_jpc(
         .in1(pc_plus4),
-        .in2(jaddr),
-        .sel(Jflush),
+        .in2(reg_rs1o),
+        .in3(extimm26),
+        .sel(sel_jaddr),
         .out(jpc)
     );
     
@@ -130,7 +131,7 @@ module mips(
         .C(pc_plus4)
     );
     
-    assign flush = flushD | Jflush;
+    assign flush = flushD;
     assign im_out = inst_in;
     
     myreg_en_clear ir(
@@ -152,7 +153,6 @@ module mips(
     );
     
     /**************** next is inst decode part ****************/
-    assign Jflush = (op == `INST_J || op == `INST_JAL || (op == `INST_TYPE_R && (funct == `INST_JR || funct == `INST_JALR))) ? 1 : 0;
     assign op = inst[31:26];
     assign rs = inst[25:21];
     assign rt = inst[20:16];
@@ -183,14 +183,9 @@ module mips(
         .out32(extimm26)
     );
     
-    wire sel_jaddr;
-    assign sel_jaddr = (op == `INST_J || op == `INST_JAL) ? 1 : 0;
-    mux32_2 mux_jaddr(
-        .in1(rs),
-        .in2(extimm26),
-        .sel(sel_jaddr),
-        .out(jaddr)
-    );
+    assign sel_jaddr = (op == `INST_J || op == `INST_JAL) ? 2'b10 :
+                       (op == `INST_TYPE_R && (funct == `INST_JR || funct == `INST_JALR)) ? 2'b01 :
+                       2'b00;
     
     load_upper load_upper_imm16(
         .imm16(imm16),
