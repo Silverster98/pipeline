@@ -62,3 +62,21 @@
 `define MEM_SB         4'b0110
 `define MEM_SH         4'b0111
 `define MEM_SW         4'b1000
+
+// about sel reg_wdata
+`define SEL_REG_WDATA_WIDTH 3
+`define SEL_REG_WDATA_ALUOUT 3'b000
+`define SEL_REG_WDATA_MEMOUT 3'b001
+`define SEL_REG_WDATA_PC4    3'b010
+`define SEL_REG_WDATA_CP0OUT 3'b011
+`define SEL_REG_WDATA_HIOUT  3'b100
+`define SEL_REG_WDATA_LOOUT  3'b101
+
+// about cp0
+`define CP0_REG_COUNT   5'b01001
+`define CP0_REG_COMPARE 5'b01011
+`define CP0_REG_STATUS  5'b01100
+`define CP0_REG_CAUSE   5'b01101
+`define CP0_REG_EPC     5'b01110
+`define CP0_REG_PRID    5'b01111
+`define CP0_REG_CONFIG  5'b10000

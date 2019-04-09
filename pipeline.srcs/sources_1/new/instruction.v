@@ -84,5 +84,5 @@
 // privilege
 `define INST_COP0       6'b010000 // cop0
     `define INST_ERET   6'b011000 // eret // decode according to low 6 bit
-    `define INST_MF     5'b00000  // mf // decode according to rs
-    `define INST_MT     5'b00100  // mt // decode according to rs
+    `define INST_MFC0   5'b00000  // mf // decode according to rs
+    `define INST_MTC0   5'b00100  // mt // decode according to rs

@@ -44,24 +44,26 @@ module mips(
     wire[31:0] aluout;
     
     wire[1:0] ans_statusM;
-    wire[31:0] aluoutM, wdataM, pc_branchM;
-    wire[4:0] wdstM;
+    wire[31:0] aluoutM, wdataM, pc_branchM, pc_plus4M;
+    wire[4:0] wdstM, rdM;
     wire sel_branch;
     
     wire mem_wen;
-    wire[31:0] memout, memoutW, aluoutW;
-    wire[4:0] wdstW;
-    wire sel_reg_wdata;
+    wire[31:0] memout, memoutW, aluoutW, pc_plus4W;
+    wire[4:0] wdstW, rdW;
+    wire[`SEL_REG_WDATA_WIDTH-1:0] sel_reg_wdata;
 
     wire[`BRANCH_TYPE_WIDTH-1:0] branch_type, branch_typeE, branch_typeM;
                                     
     wire reg_wenE, mem_wenE; 
     wire[`ALU_CTRL-1:0] alu_ctrlE;
     wire[1:0] sel_aluoutE, sel_regdstE;
-    wire sel_reg_wdataE;
+    wire[`SEL_REG_WDATA_WIDTH-1:0] sel_reg_wdataE;
     wire[`SEL_SRCB_WIDTH-1:0] sel_srcBE;
-    wire reg_wenM, mem_wenM, sel_reg_wdataM;
-    wire reg_wenW, sel_reg_wdataW;
+    wire reg_wenM, mem_wenM;
+    wire[`SEL_REG_WDATA_WIDTH-1:0] sel_reg_wdataM;
+    wire reg_wenW;
+    wire[`SEL_REG_WDATA_WIDTH-1:0] sel_reg_wdataW;
     
     wire[1:0] sel_forward_rs, sel_forward_rt;
     wire[31:0] forward_B;
@@ -70,14 +72,24 @@ module mips(
     wire sel_bool;
     
     wire[`MEM_TYPE_WIDTH-1:0] mem_type, mem_typeE, mem_typeM;
+    wire[31:0] cp0_data_o, cp0_data_oM, cp0_data_oW;
+    wire[31:0] cp0_wdata;
+    wire timer_int_o;
+    wire cp0_wen, cp0_wenE, cp0_wenM, cp0_wenW;
+    
+    
+    
     
     /**************** mips control unit ****************/
     cu mips_cu(
         .rst(rst),
         .op(op),
+        .rs(rs),
+        .rt(rt),
         .funct(funct),
         .reg_wen(reg_wen),
         .mem_wen(mem_wen),
+        .cp0_wen(cp0_wen),
         .branch_type(branch_type),
         .aluctrl(alu_ctrl),
         .sel_aluout(sel_aluout),
@@ -216,6 +228,7 @@ module mips(
         .clear(flushE),
         .reg_wen(reg_wen),
         .mem_wen(mem_wen),
+        .cp0_wen(cp0_wen),
         .branch_type(branch_type),
         .aluctrl(alu_ctrl),
         .sel_aluout(sel_aluout),
@@ -225,6 +238,7 @@ module mips(
         .sel_regdst(sel_regdst),
         .reg_wenE(reg_wenE),
         .mem_wenE(mem_wenE),
+        .cp0_wenE(cp0_wenE),
         .branch_typeE(branch_typeE),
         .aluctrlE(alu_ctrlE),
         .sel_aluoutE(sel_aluoutE),
@@ -303,6 +317,18 @@ module mips(
         .out(aluout)
     );
     
+    cp0_reg mips_cp0(
+        .clk(clk),
+        .rst(rst),
+        .we(cp0_wenW),
+        .waddr(rdW),
+        .raddr(rdE),
+        .wdata(cp0_wdata),
+        .int_i(intr),      // intruction 
+        .data_o(cp0_data_o),
+        .timer_int_o(timer_int_o)
+    );
+    
     regM mips_regM(
         .rst(rst),
         .clk(clk),
@@ -313,11 +339,17 @@ module mips(
         .in_wdata_mem(forward_B),
         .in_wdst(wdstE),
         .in_pc_branch(pc_branch),
+        .in_rd(rdE),
+        .in_pc4(pc_plus4E),
+        .in_cp0_data_o(cp0_data_o),
         .out_ans_status(ans_statusM),
         .out_aluout(aluoutM),
         .out_wdata_mem(wdataM),
         .out_wdst(wdstM),
-        .out_pc_branch(pc_branchM)
+        .out_pc_branch(pc_branchM),
+        .out_rd(rdM),
+        .out_pc4(pc_plus4M),
+        .out_cp0_data_o(cp0_data_oM)
     );
     
     ctrl_regM mips_ctrl_regM(
@@ -326,11 +358,13 @@ module mips(
         .clear(flushM),
         .reg_wen(reg_wenE),
         .mem_wen(mem_wenE),
+        .cp0_wen(cp0_wenE),
         .branch_type(branch_typeE),
         .mem_type(mem_typeE),
         .sel_reg_wdata(sel_reg_wdataE),
         .reg_wenM(reg_wenM),
         .mem_wenM(mem_wenM),
+        .cp0_wenM(cp0_wenM),
         .branch_typeM(branch_typeM),
         .mem_typeM(mem_typeM),
         .sel_reg_wdataM(sel_reg_wdataM)
@@ -372,24 +406,38 @@ module mips(
         .in_aluout(aluoutM),
         .in_memout(memout),
         .in_wdst(wdstM),
+        .in_rd(rdM),
+        .in_pc4(pc_plus4M),
+        .in_cp0_data_o(cp0_data_oM),
+        .in_cp0_wdata(wdataM),
         .out_aluout(aluoutW),
         .out_memout(memoutW),
-        .out_wdst(wdstW)
+        .out_wdst(wdstW),
+        .out_rd(rdW),
+        .out_pc4(pc_plus4W),
+        .out_cp0_data_o(cp0_data_oW),
+        .out_cp0_wdata(cp0_wdata)
     );
     
     ctrl_regW mips_ctrl_regW(
         .rst(rst),
         .clk(clk),
         .reg_wen(reg_wenM),
+        .cp0_wen(cp0_wenM),
         .sel_reg_wdata(sel_reg_wdataM),
         .reg_wenW(reg_wenW),
+        .cp0_wenW(cp0_wenW),
         .sel_reg_wdataW(sel_reg_wdataW)
     );
     
     /**************** next is write back part ****************/
-    mux32_2 mux_reg_wdata(
+    mux32_8 mux_reg_wdata(
         .in1(aluoutW),
         .in2(memoutW),
+        .in3(pc_plus4W),
+        .in4(cp0_data_oW),
+        .in5(), // HI
+        .in6(), // LO
         .sel(sel_reg_wdataW),
         .out(reg_wdata)
     );
