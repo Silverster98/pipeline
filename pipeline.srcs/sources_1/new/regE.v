@@ -4,7 +4,6 @@ module regE(
     input wire rst,
     input wire clk,
     input wire clear,
-    input wire en,
     input wire[31:0] in_A, in_B,
     input wire[4:0] in_rs, in_rt, in_rd, in_sa,
     input wire[31:0] in_extimm16, in_upperimm16, in_pc_plus4,
@@ -28,7 +27,7 @@ module regE(
             out_extimm16 <= 32'h00000000;
             out_upperimm16 <= 32'h00000000;
             out_pc_plus4 <= 32'h00000000;
-        end else if (en) begin
+        end else begin
             out_A <= in_A;
             out_B <= in_B;
             out_rs <= in_rs;
@@ -38,16 +37,6 @@ module regE(
             out_extimm16 <= in_extimm16;
             out_upperimm16 <= in_upperimm16;
             out_pc_plus4 <= in_pc_plus4;
-        end else begin
-            out_A <= out_A;
-            out_B <= out_B;
-            out_rs <= out_rs;
-            out_rt <= out_rt;
-            out_rd <= out_rd;
-            out_sa <= out_sa;
-            out_extimm16 <= out_extimm16;
-            out_upperimm16 <= out_upperimm16;
-            out_pc_plus4 <= out_pc_plus4;
         end
     end
 endmodule

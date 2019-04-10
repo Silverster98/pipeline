@@ -21,11 +21,14 @@
 `define ANS_LZ    2'b11
 
 // about sel_aluout signal
-`define SEL_ALUOUT_WIDTH 2
-`define SEL_ALUOUT_C     2'b00
-`define SEL_ALUOUT_IMM   2'b01
-`define SEL_ALUOUT_BOOL  2'b10
-`define SEL_ALUOUT_PC4   2'b11
+`define SEL_ALUOUT_WIDTH 3
+`define SEL_ALUOUT_C     3'b000
+`define SEL_ALUOUT_IMM   3'b001
+`define SEL_ALUOUT_BOOL  3'b010
+`define SEL_ALUOUT_PC4   3'b011
+`define SEL_ALUOUT_CP0   3'b100
+`define SEL_ALUOUT_HI    3'b101
+`define SEL_ALUOUT_LO    3'b110
 
 // about sel_regdst signal
 `define SEL_REGDST_WIDTH 2
@@ -64,13 +67,9 @@
 `define MEM_SW         4'b1000
 
 // about sel reg_wdata
-`define SEL_REG_WDATA_WIDTH 3
-`define SEL_REG_WDATA_ALUOUT 3'b000
-`define SEL_REG_WDATA_MEMOUT 3'b001
-`define SEL_REG_WDATA_PC4    3'b010
-`define SEL_REG_WDATA_CP0OUT 3'b011
-`define SEL_REG_WDATA_HIOUT  3'b100
-`define SEL_REG_WDATA_LOOUT  3'b101
+`define SEL_REG_WDATA_WIDTH 1
+`define SEL_REG_WDATA_ALUOUT 1'b0
+`define SEL_REG_WDATA_MEMOUT 1'b1
 
 // about cp0
 `define CP0_REG_COUNT   5'b01001
@@ -80,3 +79,13 @@
 `define CP0_REG_EPC     5'b01110
 `define CP0_REG_PRID    5'b01111
 `define CP0_REG_CONFIG  5'b10000
+
+// about branch judge
+`define JUDGE_EZ 2'b00
+`define JUDGE_GZ 2'b01
+`define JUDGE_LZ 2'b11 
+
+// about sel_branch_rt
+`define SEL_BRANCH_RT_WIDTH 1
+`define SEL_BRANCH_RT_RT    1'b0
+`define SEL_BRANCH_RT_ZERO  1'b1

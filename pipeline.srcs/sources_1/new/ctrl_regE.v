@@ -5,7 +5,6 @@ module ctrl_regE(
     input wire rst,
     input wire clk, clear,
     input wire reg_wen, mem_wen, cp0_wen,
-    input wire[`BRANCH_TYPE_WIDTH:0] branch_type,
     input wire[`ALU_CTRL-1:0] aluctrl,
     input wire[`SEL_REG_WDATA_WIDTH-1:0] sel_reg_wdata, 
     input wire[`SEL_SRCB_WIDTH-1:0] sel_srcB,
@@ -14,7 +13,6 @@ module ctrl_regE(
     input wire[`SEL_REGDST_WIDTH-1:0] sel_regdst,
     
     output reg reg_wenE, mem_wenE, cp0_wenE,
-    output reg[`BRANCH_TYPE_WIDTH:0] branch_typeE,
     output reg[`ALU_CTRL-1:0] aluctrlE,
     output reg[`SEL_REG_WDATA_WIDTH-1:0] sel_reg_wdataE, 
     output reg[`SEL_SRCB_WIDTH-1:0] sel_srcBE,
@@ -31,7 +29,6 @@ module ctrl_regE(
             reg_wenE <= 0;
             mem_wenE <= 0;
             cp0_wenE <= 0;
-            branch_typeE  <= `BRANCH_NONE;
             aluctrlE <= `ALU_ADD;
             sel_aluoutE <= `SEL_ALUOUT_C;
             sel_reg_wdataE <= `SEL_REG_WDATA_ALUOUT;
@@ -42,7 +39,6 @@ module ctrl_regE(
             reg_wenE <= reg_wen;
             mem_wenE <= mem_wen;
             cp0_wenE <= cp0_wen;
-            branch_typeE  <= branch_type;
             aluctrlE <= aluctrl;
             sel_aluoutE <= sel_aluout;
             sel_reg_wdataE <= sel_reg_wdata;

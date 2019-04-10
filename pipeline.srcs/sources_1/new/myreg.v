@@ -12,7 +12,7 @@ module myreg_en_clear(
     wire set_zero = clear || rst;
     
     always @ (posedge clk) begin
-        if (set_zero) out32 <= 0;
+        if (set_zero) out32 <= 32'h00000000;
         else if (en) out32 <= in32;
         else out32 <= out32;
     end
