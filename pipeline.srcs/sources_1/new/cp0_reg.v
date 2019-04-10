@@ -23,7 +23,7 @@ module cp0_reg(
 //    reg[31:0] cp0_reg_prid,
     reg[31:0] cp0_reg_config;
     
-    always @ (posedge clk) begin
+    always @ (negedge clk) begin
         if (rst == 1) begin
             cp0_reg_count <= 32'h00000000;
             cp0_reg_compare <= 32'h00000000;

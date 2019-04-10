@@ -4,13 +4,14 @@
 module conflict_detect(
     input wire[`BRANCH_TYPE_WIDTH-1:0] branch_type,
     input wire[4:0] rsE, rtE, wdstM, wdstW, wdstE, 
-    input wire reg_wenM, reg_wenW, reg_wenE,
+    input wire reg_wenM, reg_wenW, reg_wenE, cp0_wenM,
     input wire[4:0] rs, rt,
-    input wire sel_reg_wdataE, sel_reg_wdataM, // 
+    input wire sel_reg_wdataE, sel_reg_wdataM,
     
     output wire[1:0] sel_forward_rs, sel_forward_rt,
     output wire stallD, stallF, flushE,
-    output wire[1:0] sel_branch_forward_rs, sel_branch_forward_rt //
+    output wire[1:0] sel_branch_forward_rs, sel_branch_forward_rt,
+    output wire sel_forward_cp0_data_o //
     );
     
     // forward
@@ -39,4 +40,7 @@ module conflict_detect(
                                    (branch && rt != 0 && rt == wdstM && reg_wenM && sel_reg_wdataM == `SEL_REG_WDATA_ALUOUT) ? 2'b10 :
                                    (branch && rt != 0 && rt == wdstE && reg_wenE && sel_reg_wdataE == `SEL_REG_WDATA_ALUOUT) ? 2'b01 :
                                    2'b00;
+    
+    // forward for cp0 data out
+    assign sel_forward_cp0_data_o = (cp0_wenM == 1'b1) ? 1 :0;
 endmodule
