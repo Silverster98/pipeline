@@ -88,6 +88,18 @@ module mips(
     
     wire[`SEL_BRANCH_RT_WIDTH-1:0] sel_branch_rt;
     
+    wire is_in_delayslot, next_is_in_delayslot, is_in_delayslotE, is_in_delayslotM;
+    
+    wire overflow_test, overflow_testE, overflow;
+    
+    wire instvalid, exception_is_eret, exception_is_syscall;
+    wire exception;
+    wire[31:0] exception_pc;
+    wire[31:0] exception_type, exception_typeE, exception_typeM, current_pc, current_pcM;
+    wire[31:0] exception_type_final;
+    
+    wire[31:0] cp0_count, cp0_compare, cp0_status, cp0_cause, cp0_epc, cp0_config;
+    
     
     /**************** mips control unit ****************/
     cu mips_cu(
@@ -96,6 +108,7 @@ module mips(
         .rs(rs),
         .rt(rt),
         .funct(funct),
+        .is_in_delayslot_i(next_is_in_delayslot),
         
         .reg_wen(reg_wen),
         .mem_wen(mem_wen),
@@ -106,7 +119,13 @@ module mips(
         .sel_reg_wdata(sel_reg_wdata),
         .sel_srcB(sel_srcB),
         .mem_type(mem_type),
-        .sel_regdst(sel_regdst)
+        .sel_regdst(sel_regdst),
+        .instvalid(instvalid), 
+        .exception_is_eret(exception_is_eret), 
+        .exception_is_syscall(exception_is_syscall),
+        .is_in_delayslot_o(is_in_delayslot),
+        .next_is_in_delayslot(next_is_in_delayslot),
+        .overflow_test(overflow_test)
     );
     
     /**************** next is inst fetch part ****************/
@@ -125,12 +144,13 @@ module mips(
         .out(npc)
     );
     
-    
     pc mips_pc(
         .clk(clk),
         .rst(rst),
         .en(!stallF), // stall
+        .exception(exception),
         .npc(npc),
+        .exception_pc(exception_pc),
         .pc(pc)
     );
     assign pc_out = pc;
@@ -147,7 +167,7 @@ module mips(
         .rst(rst),
         .clk(clk),
         .en(!stallD),
-        .clear(1'b0),
+        .clear(exception),
         .in32(im_out),
         .out32(inst)
     );
@@ -156,7 +176,7 @@ module mips(
         .rst(rst),
         .clk(clk),
         .en(!stallD),
-        .clear(1'b0),
+        .clear(exception),
         .in32(pc_plus4),
         .out32(pc_plus4D)
     );
@@ -249,13 +269,17 @@ module mips(
     assign blez_branch = (branch_type == `BRANCH_BLEZ) && (branch_judge == `JUDGE_EZ || branch_judge == `JUDGE_LZ);
     assign bgez_branch = (branch_type == `BRANCH_BGEZ) && (branch_judge == `JUDGE_EZ || branch_judge == `JUDGE_GZ);
     assign bltz_branch = (branch_type == `BRANCH_BLTZ) && (branch_judge == `JUDGE_LZ);
+    assign bltzal_branch = (branch_type == `BRANCH_BLTZAL) && (branch_judge == `JUDGE_LZ);
+    assign bgezal_branch = (branch_type == `BRANCH_BGEZAL) && (branch_judge == `JUDGE_EZ || branch_judge == `JUDGE_GZ); 
     
-    assign sel_branch = beq_branch || bgtz_branch || bne_branch || blez_branch || bgez_branch || bltz_branch;
+    assign sel_branch = beq_branch || bgtz_branch || bne_branch || blez_branch || bgez_branch || bltz_branch || bltzal_branch || bgezal_branch;
+    
+    assign exception_type = {19'b0, exception_is_eret, 2'b0, instvalid, exception_is_syscall, 8'b0};
     
     regE mips_regE(
         .rst(rst),
         .clk(clk),
-        .clear(flushE),
+        .clear(flushE || exception),
         .in_A(reg_rs1o),
         .in_B(reg_rs2o),
         .in_rs(rs),
@@ -265,6 +289,8 @@ module mips(
         .in_extimm16(extimm16),
         .in_upperimm16(upperimm16),
         .in_pc_plus4(pc_plus4D),
+        .in_exception_type(exception_type),
+        .in_is_in_delayslot(is_in_delayslot),
         .out_A(A),
         .out_B(B),
         .out_rs(rsE),
@@ -273,13 +299,15 @@ module mips(
         .out_sa(saE),
         .out_extimm16(extimm16E),
         .out_upperimm16(upperimm16E),
-        .out_pc_plus4(pc_plus4E)
+        .out_pc_plus4(pc_plus4E),
+        .out_exception_type(exception_typeE),
+        .out_is_in_delayslot(is_in_delayslotE)
     );
     
     ctrl_regE mips_ctrl_regE(
         .rst(rst),
         .clk(clk),
-        .clear(flushE),
+        .clear(flushE || exception),
         .reg_wen(reg_wen),
         .mem_wen(mem_wen),
         .cp0_wen(cp0_wen),
@@ -289,6 +317,8 @@ module mips(
         .sel_srcB(sel_srcB),
         .mem_type(mem_type),
         .sel_regdst(sel_regdst),
+        .overflow_test(overflow_test),
+        
         .reg_wenE(reg_wenE),
         .mem_wenE(mem_wenE),
         .cp0_wenE(cp0_wenE),
@@ -297,7 +327,8 @@ module mips(
         .sel_reg_wdataE(sel_reg_wdataE),
         .sel_srcBE(sel_srcBE),
         .mem_typeE(mem_typeE),
-        .sel_regdstE(sel_regdstE)
+        .sel_regdstE(sel_regdstE),
+        .overflow_testE(overflow_testE)
     );
     
     /**************** next is execute part ****************/
@@ -341,8 +372,11 @@ module mips(
         .B(srcB),
         .alu_ctrl(alu_ctrlE),
         .sa(saE),
+        
+        .overflow_test(overflow_testE),
         .C(C),
-        .ans_status(ans_status)
+        .ans_status(ans_status),
+        .overflow(overflow)
     );
     
     assign sel_bool = (ans_status == `ANS_LZ) ? 1 : 0;
@@ -360,9 +394,19 @@ module mips(
         .waddr(rdW),
         .raddr(rdE),
         .wdata(cp0_wdata),
-        .int_i(intr),      // intruction 
+        .int_i(intr),      // interrupt 
+        .exception_final(exception_type_final),
+        .current_pc(current_pcM),
+        .is_in_delayslot(is_in_delayslotM),
+        
         .data_o(cp0_data_o),
-        .timer_int_o(timer_int_o)
+        .timer_int_o(timer_int_o),
+        .cp0_reg_count(cp0_count),
+        .cp0_reg_compare(cp0_compare),
+        .cp0_reg_status(cp0_status),
+        .cp0_reg_cause(cp0_cause),
+        .cp0_reg_epc(cp0_epc),   
+        .cp0_reg_config(cp0_config)
     );
     
     mux32_2 mux_forward_cp0_data_o(
@@ -385,24 +429,35 @@ module mips(
         .out(aluout)
     );
     
+    wire[31:0] exception_typeE_temp;
+    assign exception_typeE_temp = {exception_typeE[31:12], overflow, exception_typeE[10:8], 8'h00};
+    assign current_pc = pc_plus4E -32'h00000004;
+    
     regM mips_regM(
         .rst(rst),
         .clk(clk),
-        .clear(1'b0),
+        .clear(exception),
         .in_aluout(aluout),
         .in_wdata_mem(forward_B),
         .in_wdst(wdstE),
         .in_rd(rdE),
+        .in_exception_type(exception_typeE_temp),
+        .in_current_pc(current_pc),
+        .in_is_in_delayslot(is_in_delayslotE),
+        
         .out_aluout(aluoutM),
         .out_wdata_mem(wdataM),
         .out_wdst(wdstM),
-        .out_rd(rdM)
+        .out_rd(rdM),
+        .out_exception_type(exception_typeM),
+        .out_current_pc(current_pcM),
+        .out_is_in_delayslot(is_in_delayslotM)
     );
     
     ctrl_regM mips_ctrl_regM(
         .rst(rst),
         .clk(clk),
-        .clear(1'b0),
+        .clear(exception),
         .reg_wen(reg_wenE),
         .mem_wen(mem_wenE),
         .cp0_wen(cp0_wenE),
@@ -416,10 +471,38 @@ module mips(
     );
     
     /**************** next is memary access part ****************/
+    wire[31:0] cp0_epc_new, cp0_status_new, cp0_cause_new;
+    assign cp0_status_new = (rst == 1) ? 32'h00000000 :
+                            (cp0_wenM == 1 && rdM == `CP0_REG_STATUS) ? wdataM :
+                            cp0_status;
+    assign cp0_epc_new = (rst == 1) ? 32'h00000000 :
+                         (cp0_wenM == 1 && rdM == `CP0_REG_EPC) ? wdataM :
+                         cp0_epc;
+    assign cp0_cause_new = (rst == 1) ? 32'h00000000 :
+                         (cp0_wenM == 1 && rdM == `CP0_REG_CAUSE) ? wdataM :
+                         cp0_cause;
+    
+    exception_final_judge exception_judge(
+        .rst(rst),
+        .clk(clk),
+        .cp0_epc_new(cp0_epc_new),
+        .current_pc(current_pcM),
+        .exception_type(exception_typeM),
+        .cp0_cause(cp0_cause_new),
+        .cp0_status(cp0_status_new),
+        
+        .exception_type_final(exception_type_final),
+        .exception_pc(exception_pc),
+        .exception(exception)
+    );
+    
+    
     assign ram_addr = aluoutM;
+    wire mem_wen_final;
+    assign mem_wen_final = mem_wenM & (~(|exception_type_final)); // (~(|))
     
     mem_module mips_mem_module(
-        .wen(mem_wenM),
+        .wen(mem_wen_final),
         .addrlow2(ram_addr[1:0]),
         .mem_data_i(ram_in),
         .mem_wdata_i(wdataM),
@@ -433,7 +516,7 @@ module mips(
     regW mips_regW(
         .rst(rst),
         .clk(clk),
-        .clear(1'b0),
+        .clear(exception),
         .in_aluout(aluoutM),
         .in_memout(memout),
         .in_wdst(wdstM),
@@ -449,6 +532,7 @@ module mips(
     ctrl_regW mips_ctrl_regW(
         .rst(rst),
         .clk(clk),
+        .clear(exception),
         .reg_wen(reg_wenM),
         .cp0_wen(cp0_wenM),
         .sel_reg_wdata(sel_reg_wdataM),

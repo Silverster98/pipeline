@@ -7,9 +7,11 @@ module alu(
     input wire[31:0] B,
     input wire[`ALU_CTRL-1:0] alu_ctrl,
     input wire[4:0] sa,
+    input wire overflow_test,
     
     output wire[31:0] C,
-    output wire[1:0] ans_status
+    output wire[1:0] ans_status,
+    output wire overflow
     );
     
     reg[32:0] temp;
@@ -19,6 +21,8 @@ module alu(
                         `ANS_LZ;
     wire[4:0] stemp;
     assign stemp = (alu_ctrl == `ALU_SLV || alu_ctrl == `ALU_SRV || alu_ctrl == `ALU_SRAV) ? A[4:0] : sa;
+    
+    assign overflow = (overflow_test == 1 && temp[32] != temp[31]) ? 1'b1 : 1'b0; 
     
     always @ (*) begin
         case (alu_ctrl)

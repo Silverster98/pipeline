@@ -8,20 +8,22 @@ module cp0_reg(
     input wire[4:0] waddr,
     input wire[4:0] raddr,
     input wire[31:0] wdata,
+    input wire[31:0] exception_final,
+    input wire[31:0] current_pc,
+    input wire is_in_delayslot,
     
     input wire[5:0] int_i,
     
     output reg[31:0] data_o,
-    output reg       timer_int_o
-    );
-    
-    reg[31:0] cp0_reg_count;
-    reg[31:0] cp0_reg_compare;
-    reg[31:0] cp0_reg_status;
-    reg[31:0] cp0_reg_cause;
-    reg[31:0] cp0_reg_epc;
+    output reg       timer_int_o,
+    output reg[31:0] cp0_reg_count,
+    output reg[31:0] cp0_reg_compare,
+    output reg[31:0] cp0_reg_status,
+    output reg[31:0] cp0_reg_cause,
+    output reg[31:0] cp0_reg_epc,
 //    reg[31:0] cp0_reg_prid,
-    reg[31:0] cp0_reg_config;
+    output reg[31:0] cp0_reg_config
+    );
     
     always @ (negedge clk) begin
         if (rst == 1) begin
@@ -63,6 +65,81 @@ module cp0_reg(
                 end
                 endcase
             end
+            
+            case (exception_final)
+            32'h00000001 : begin // interrupt
+                if (is_in_delayslot) begin
+                    cp0_reg_epc <= current_pc - 4;
+                    cp0_reg_cause[31] <= 1'b1;
+                end else begin
+                    cp0_reg_epc <= current_pc;
+                    cp0_reg_cause[31] <= 1'b0;
+                end
+                
+                cp0_reg_status[1] <= 1'b1;
+                cp0_reg_cause[6:2] <= 5'b00000;
+            end
+            32'h00000008 : begin // syscall
+                if (cp0_reg_status[1] == 1'b0) begin
+                    if (is_in_delayslot) begin
+                        cp0_reg_epc <= current_pc - 4;
+                        cp0_reg_cause[31] <= 1'b1;
+                    end else begin
+                        cp0_reg_epc <= current_pc;
+                        cp0_reg_cause[31] <= 1'b0;
+                    end
+                end
+                
+                cp0_reg_status[1] <= 1'b1;
+                cp0_reg_cause[6:2] <= 5'b01000;
+            end
+            32'h0000000a : begin // invalid instruction
+                if (cp0_reg_status[1] == 1'b0) begin
+                    if (is_in_delayslot) begin
+                        cp0_reg_epc <= current_pc - 4;
+                        cp0_reg_cause[31] <= 1'b1;
+                    end else begin
+                        cp0_reg_epc <= current_pc;
+                        cp0_reg_cause[31] <= 1'b0;
+                    end
+                end
+                
+                cp0_reg_status[1] <= 1'b1;
+                cp0_reg_cause[6:2] <= 5'b01010;
+            end
+            32'h0000000d : begin // trap
+                if (cp0_reg_status[1] == 1'b0) begin
+                    if (is_in_delayslot) begin
+                        cp0_reg_epc <= current_pc - 4;
+                        cp0_reg_cause[31] <= 1'b1;
+                    end else begin
+                        cp0_reg_epc <= current_pc;
+                        cp0_reg_cause[31] <= 1'b0;
+                    end
+                end
+                
+                cp0_reg_status[1] <= 1'b1;
+                cp0_reg_cause[6:2] <= 5'b01101;
+            end
+            32'h0000000c : begin // overflow
+                if (cp0_reg_status[1] == 1'b0) begin
+                    if (is_in_delayslot) begin
+                        cp0_reg_epc <= current_pc - 4;
+                        cp0_reg_cause[31] <= 1'b1;
+                    end else begin
+                        cp0_reg_epc <= current_pc;
+                        cp0_reg_cause[31] <= 1'b0;
+                    end
+                end
+                
+                cp0_reg_status[1] <= 1'b1;
+                cp0_reg_cause[6:2] <= 5'b01100;
+            end
+            32'h0000000e : begin // eret
+                cp0_reg_status[1] <= 1'b0;
+            end
+            default : ;
+            endcase
         end
     end
     

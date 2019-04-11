@@ -4,6 +4,7 @@
 module ctrl_regW(
     input wire rst,
     input wire clk,
+    input wire clear,
     input wire reg_wen, cp0_wen,
     input wire[`SEL_REG_WDATA_WIDTH-1:0] sel_reg_wdata,
     
@@ -11,8 +12,11 @@ module ctrl_regW(
     output reg[`SEL_REG_WDATA_WIDTH-1:0] sel_reg_wdataW
     );
     
+    wire set_zero;
+    assign set_zero = rst || clear;
+    
     always @ (posedge clk) begin
-        if (rst == 1'b1) begin
+        if (set_zero) begin
             reg_wenW <= 0;
             cp0_wenW <= 0;
             sel_reg_wdataW <= `SEL_REG_WDATA_ALUOUT;
