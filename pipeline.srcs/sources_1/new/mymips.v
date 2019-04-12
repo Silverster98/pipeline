@@ -2,7 +2,11 @@
 
 module mymips(
     input wire clk,
-    input wire rst
+    input wire rst,
+    
+    output wire[31:0] port0,
+    output wire[31:0] port1,
+    output wire[31:0] port2
     );
     
     wire[31:0] inst_in, pc_out;
@@ -10,6 +14,8 @@ module mymips(
     wire[3:0] wsel;
     wire[5:0] interrupt;
     wire timer_int_o;
+    
+    wire[31:0] ram_wsel, io_wsel;
     
     assign interrupt = {5'b00000, timer_int_o};
     
@@ -32,33 +38,30 @@ module mymips(
         .spo(inst_in)
     );
     
-//    mem_map mmap(
-//        .addr_h4(addr[31:28]),
-//        .wen(wen),
-//        .ram_wen(ram_wen),
-//        .io_wen(io_wen)
-//    );
+    mem_map mmap(
+        .addr_h12(addr[31:20]),
+        .wsel(wsel),
+        .ram_wsel(ram_wsel),
+        .io_wsel(io_wsel)
+    );
     
-//    ram mips_ram(
-//        .a(addr[9:2]),      // input wire [7 : 0] a
-//        .d(wdata),      // input wire [31 : 0] d
-//        .clk(clk),  // input wire clk
-//        .we(ram_wen),    // input wire we
-//        .spo(data_in)  // output wire [31 : 0] spo
-//    );
     ram mips_ram(
         .clk(clk),
         .addr(addr),
         .wdata(wdata),
-        .wsel(wsel),
+        .wsel(ram_wsel),
         .mem_data_o(data_in)
     );
     
-//    io_port ioport(
-//        .clk(clk),
-//        .rst(rst),
-//        .addr(addr[3:2]),
-//        .wdata(wdata),
-//        .wen(io_wen)
-//    );
+    io_port ioport(
+        .clk(clk),
+        .rst(rst),
+        .addr(addr),
+        .wdata(wdata),
+        .wsel(io_wsel),
+        
+        .port0(port0),
+        .port1(port1),
+        .port2(port2)
+    );
 endmodule

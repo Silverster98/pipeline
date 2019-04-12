@@ -1,13 +1,13 @@
 `timescale 1ns / 1ps
 
 module mem_map(
-    input wire[3:0] addr_h4,
-    input wire wen,
+    input wire[11:0] addr_h12,
+    input wire[3:0] wsel,
     
-    output wire ram_wen,
-    output wire io_wen
+    output wire[3:0] ram_wsel,
+    output wire[3:0] io_wsel
     );
     
-    assign io_wen = (addr_h4 == 4'b1111) ? wen : 0;
-    assign ram_wen = (addr_h4 != 4'b1111) ? wen : 0;
+    assign io_wsel = (addr_h12 == 12'hfff) ? wsel : 4'b0000;
+    assign ram_wsel = (addr_h12 != 12'hfff) ? wsel : 4'b0000;
 endmodule
