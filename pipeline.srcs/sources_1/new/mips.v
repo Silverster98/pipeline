@@ -7,11 +7,13 @@ module mips(
     input wire rst,
     input wire[31:0] inst_in,
     input wire[31:0] ram_in,
+    input wire[5:0] int,
     
     output wire[31:0] pc_out,
     output wire[31:0] ram_addr,
     output wire[31:0] ram_wdata,
-    output wire[3:0]  ram_wsel
+    output wire[3:0]  ram_wsel,
+    output wire timer_int_o
     );
     
     wire[31:0] npc, pc;
@@ -74,7 +76,6 @@ module mips(
     wire[`MEM_TYPE_WIDTH-1:0] mem_type, mem_typeE, mem_typeM;
     wire[31:0] cp0_data_o;
     wire[31:0] cp0_wdata;
-    wire timer_int_o;
     wire cp0_wen, cp0_wenE, cp0_wenM, cp0_wenW;
     wire[31:0] forward_cp0_data_o;
     wire sel_forward_cp0_data_o;
@@ -86,9 +87,12 @@ module mips(
     wire[31:0] branch_forward_rs, branch_forward_rt;
     wire[31:0] branch_rs, branch_rt;
     
+    wire[31:0] jump_forward_rs;
+    wire[1:0] sel_jump_forward_rs;
+    
     wire[`SEL_BRANCH_RT_WIDTH-1:0] sel_branch_rt;
     
-    wire is_in_delayslot, next_is_in_delayslot, is_in_delayslotE, is_in_delayslotM;
+    wire is_in_delayslot, next_is_in_delayslot, next_is_in_delayslot_temp, is_in_delayslotE, is_in_delayslotM;
     
     wire overflow_test, overflow_testE, overflow;
     
@@ -124,14 +128,29 @@ module mips(
         .exception_is_eret(exception_is_eret), 
         .exception_is_syscall(exception_is_syscall),
         .is_in_delayslot_o(is_in_delayslot),
-        .next_is_in_delayslot(next_is_in_delayslot),
+        .next_is_in_delayslot(next_is_in_delayslot_temp),
         .overflow_test(overflow_test)
     );
     
+    myreg1 delayslot_reg(
+        .clk(clk),
+        .in1(next_is_in_delayslot_temp),
+        .out1(next_is_in_delayslot)
+    );
+    
     /**************** next is inst fetch part ****************/
+    mux32_4 mux_jump_forward_rs(
+        .in1(reg_rs1o),
+        .in2(aluout),
+        .in3(aluoutM),
+        .in4(memout),
+        .sel(sel_jump_forward_rs),
+        .out(jump_forward_rs)
+    );
+    
     mux32_4 mux_jpc(
         .in1(pc_plus4),
-        .in2(reg_rs1o),
+        .in2(jump_forward_rs),
         .in3(extimm26),
         .sel(sel_jaddr),
         .out(jpc)
@@ -394,7 +413,7 @@ module mips(
         .waddr(rdW),
         .raddr(rdE),
         .wdata(cp0_wdata),
-        .int_i(intr),      // interrupt 
+        .int_i(int),      // interrupt 
         .exception_final(exception_type_final),
         .current_pc(current_pcM),
         .is_in_delayslot(is_in_delayslotM),
@@ -431,7 +450,7 @@ module mips(
     
     wire[31:0] exception_typeE_temp;
     assign exception_typeE_temp = {exception_typeE[31:12], overflow, exception_typeE[10:8], 8'h00};
-    assign current_pc = pc_plus4E -32'h00000004;
+    assign current_pc = pc_plus4E - 32'h00000004;
     
     regM mips_regM(
         .rst(rst),
@@ -573,7 +592,8 @@ module mips(
         .flushE(flushE),
         .sel_branch_forward_rs(sel_branch_forward_rs), 
         .sel_branch_forward_rt(sel_branch_forward_rt),
-        .sel_forward_cp0_data_o(sel_forward_cp0_data_o)
+        .sel_forward_cp0_data_o(sel_forward_cp0_data_o),
+        .sel_jump_forward_rs(sel_jump_forward_rs)
     );
-  
+
 endmodule

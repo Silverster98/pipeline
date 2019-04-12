@@ -8,16 +8,23 @@ module mymips(
     wire[31:0] inst_in, pc_out;
     wire[31:0] addr, wdata, data_in;
     wire[3:0] wsel;
+    wire[5:0] interrupt;
+    wire timer_int_o;
+    
+    assign interrupt = {5'b00000, timer_int_o};
     
     mips mips_core(
         .clk(clk),
         .rst(rst),
         .inst_in(inst_in),
         .ram_in(data_in),
+        .int(interrupt),
+        
         .pc_out(pc_out),
         .ram_addr(addr),
         .ram_wdata(wdata),
-        .ram_wsel(wsel)
+        .ram_wsel(wsel),
+        .timer_int_o(timer_int_o)
     );
     
     rom mips_rom(

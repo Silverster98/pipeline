@@ -17,3 +17,15 @@ module myreg_en_clear(
         else out32 <= out32;
     end
 endmodule
+
+module myreg1(
+    input wire clk,
+    input wire in1,
+    
+    output reg out1
+    );
+    
+    always @ (posedge clk) begin
+        out1 <= in1;
+    end
+endmodule

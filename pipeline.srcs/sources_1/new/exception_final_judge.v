@@ -13,13 +13,14 @@ module exception_final_judge(
     output reg exception
     );
     
-    always @ (*) begin
+    always @ (posedge clk) begin
         if (rst == 1) begin
             exception_type_final <= 32'h00000000;
             exception <= 1'b0;
             exception_pc <= 32'h00000000;
         end else begin
-            exception_type_final = 32'h00000000;
+            exception_type_final <= 32'h00000000;
+            exception <= 1'b0;
             if (current_pc != 32'h00000000) begin
                 if ((cp0_status[15:8] & cp0_cause[15:8]) != 8'h00 && (cp0_status[1] == 1'b0) && (cp0_status[0] == 1'b1)) begin
                     exception_type_final <= 32'h00000001; // interrupt

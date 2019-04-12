@@ -11,7 +11,8 @@ module conflict_detect(
     output wire[1:0] sel_forward_rs, sel_forward_rt,
     output wire stallD, stallF, flushE,
     output wire[1:0] sel_branch_forward_rs, sel_branch_forward_rt,
-    output wire sel_forward_cp0_data_o //
+    output wire sel_forward_cp0_data_o,
+    output wire[1:0] sel_jump_forward_rs
     );
     
     // forward
@@ -43,4 +44,10 @@ module conflict_detect(
     
     // forward for cp0 data out
     assign sel_forward_cp0_data_o = (cp0_wenM == 1'b1) ? 1 :0;
+    
+    // forward for jr jarl
+    assign sel_jump_forward_rs = (rs != 0 && rs == wdstM && reg_wenM && sel_reg_wdataM == `SEL_REG_WDATA_MEMOUT) ? 2'b11 :
+                                 (rs != 0 && rs == wdstM && reg_wenM && sel_reg_wdataM == `SEL_REG_WDATA_ALUOUT) ? 2'b10 :
+                                 (rs != 0 && rs == wdstE && reg_wenE && sel_reg_wdataE == `SEL_REG_WDATA_ALUOUT) ? 2'b01 :
+                                 2'b00;
 endmodule

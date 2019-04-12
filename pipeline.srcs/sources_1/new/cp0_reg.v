@@ -21,33 +21,40 @@ module cp0_reg(
     output reg[31:0] cp0_reg_status,
     output reg[31:0] cp0_reg_cause,
     output reg[31:0] cp0_reg_epc,
-//    reg[31:0] cp0_reg_prid,
     output reg[31:0] cp0_reg_config
     );
     
     always @ (negedge clk) begin
+        cp0_reg_cause[15:10] <= int_i;
         if (rst == 1) begin
             cp0_reg_count <= 32'h00000000;
-            cp0_reg_compare <= 32'h00000000;
-            cp0_reg_status <= 32'h10000000;
-            cp0_reg_cause <= 32'h00000000;
-            cp0_reg_epc <= 32'h00000000;
-//            cp0_reg_prid <= 
-            cp0_reg_config <= 32'h00000000;
             timer_int_o <= 1'b0;
         end else begin
-            cp0_reg_count <= cp0_reg_count + 1;
-            cp0_reg_cause[15:10] <= int_i;
+            cp0_reg_count = cp0_reg_count + 1; // stall
+            timer_int_o = 1'b0; // stall
+            
+            if (we == 1'b1) begin
+                if (waddr == `CP0_REG_COUNT) begin
+                    cp0_reg_count <= wdata;
+                end
+            end
             
             if (cp0_reg_compare != 32'h00000000 && cp0_reg_count == cp0_reg_compare) begin
                 timer_int_o <= 1'b1;
             end
-            
+        end
+    end
+    
+    always @ (*) begin
+        if (rst == 1) begin
+            cp0_reg_compare <= 32'h00000000;
+            cp0_reg_status <= 32'h10000000;
+            cp0_reg_cause <= 32'h00000000;
+            cp0_reg_epc <= 32'h00000000;
+            cp0_reg_config <= 32'h00000000;
+        end else begin
             if (we == 1'b1) begin
                 case (waddr)
-                `CP0_REG_COUNT : begin
-                    cp0_reg_count <= wdata;
-                end
                 `CP0_REG_COMPARE : begin
                     cp0_reg_compare <= wdata;
                     timer_int_o <= 1'b0;
