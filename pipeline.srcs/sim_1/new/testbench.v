@@ -2,9 +2,12 @@
 
 module testbench();
     reg clk, rst;
+    wire[7:0] io_out;
     mymips mymips_core(
         .clk(clk),
-        .rst(rst)
+        .rst(rst),
+        
+        .io_out(io_out)
     );
     
     initial begin
@@ -13,10 +16,10 @@ module testbench();
         rst = 1;
         clk = 0;
         #17 rst = 0;
-        #200
+        #16000
         $stop;
         
     end
     
-    always #10 clk = ~clk; // clock
+    always #5 clk = ~clk; // clock
 endmodule
