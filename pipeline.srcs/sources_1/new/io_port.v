@@ -9,13 +9,15 @@ module io_port(
     
     output wire[31:0] port0,
     output wire[31:0] port1,
-    output wire[31:0] port2
+    output wire[31:0] port2,
+    output wire[31:0] port3
     );
     
     reg[31:0] port[2:0]; // just 16 Byte
     assign port0 = port[0];
     assign port1 = port[1];
     assign port2 = port[2];
+    assign port3 = port[3];
     
     always @ (posedge clk) begin
         if (rst) begin

@@ -92,14 +92,14 @@ module mips(
     
     wire[`SEL_BRANCH_RT_WIDTH-1:0] sel_branch_rt;
     
-    wire is_in_delayslot, next_is_in_delayslot, next_is_in_delayslot_temp, is_in_delayslotE, is_in_delayslotM;
+    wire is_in_delayslot, next_is_in_delayslot, next_is_in_delayslot_temp, is_in_delayslotE, is_in_delayslotM, is_in_delayslot_temp;
     
     wire overflow_test, overflow_testE, overflow;
     
     wire instvalid, exception_is_eret, exception_is_syscall;
     wire exception;
     wire[31:0] exception_pc;
-    wire[31:0] exception_type, exception_typeE, exception_typeM, current_pc, current_pcM;
+    wire[31:0] exception_type, exception_typeE, exception_typeM, current_pc, current_pcM, current_pc_temp;
     wire[31:0] exception_type_final;
     
     wire[31:0] cp0_count, cp0_compare, cp0_status, cp0_cause, cp0_epc, cp0_config;
@@ -423,8 +423,8 @@ module mips(
         .wdata(cp0_wdata),
         .int_i(int),      // interrupt 
         .exception_final(exception_type_final),
-        .current_pc(current_pcM),
-        .is_in_delayslot(is_in_delayslotM),
+        .current_pc(current_pc_temp),
+        .is_in_delayslot(is_in_delayslot_temp),
         
         .data_o(cp0_data_o),
         .timer_int_o(timer_int_o),
@@ -514,13 +514,16 @@ module mips(
         .clk(clk),
         .cp0_epc_new(cp0_epc_new),
         .current_pc(current_pcM),
+        .is_in_delayslot(is_in_delayslotM),
         .exception_type(exception_typeM),
         .cp0_cause(cp0_cause_new),
         .cp0_status(cp0_status_new),
         
         .exception_type_final(exception_type_final),
         .exception_pc(exception_pc),
-        .exception(exception)
+        .exception(exception),
+        .current_pc_temp(current_pc_temp),
+        .is_in_delayslot_temp(is_in_delayslot_temp)
     );
     
     

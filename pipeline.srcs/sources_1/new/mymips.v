@@ -4,9 +4,7 @@ module mymips(
     input wire clk,
     input wire rst,
     
-    output wire[31:0] port0,
-    output wire[31:0] port1,
-    output wire[31:0] port2
+    output wire[7:0] io_out
     );
     
     wire[31:0] inst_in, pc_out;
@@ -16,6 +14,9 @@ module mymips(
     wire timer_int_o;
     
     wire[31:0] ram_wsel, io_wsel;
+    
+    wire[31:0] port0, port1, port2, port3;
+    assign io_out = port0[7:0];
     
     assign interrupt = {5'b00000, timer_int_o};
     
@@ -62,6 +63,7 @@ module mymips(
         
         .port0(port0),
         .port1(port1),
-        .port2(port2)
+        .port2(port2),
+        .port3(port3)
     );
 endmodule

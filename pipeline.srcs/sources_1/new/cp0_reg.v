@@ -24,8 +24,7 @@ module cp0_reg(
     output reg[31:0] cp0_reg_config
     );
     
-    always @ (negedge clk) begin
-        cp0_reg_cause[15:10] <= int_i;
+    always @ (posedge clk) begin
         if (rst == 1) begin
             cp0_reg_count <= 32'h00000000;
             timer_int_o <= 1'b0;
@@ -45,7 +44,7 @@ module cp0_reg(
         end
     end
     
-    always @ (*) begin
+    always @ (negedge clk) begin
         if (rst == 1) begin
             cp0_reg_compare <= 32'h00000000;
             cp0_reg_status <= 32'h10000000;
@@ -53,11 +52,12 @@ module cp0_reg(
             cp0_reg_epc <= 32'h00000000;
             cp0_reg_config <= 32'h00000000;
         end else begin
+            cp0_reg_cause[15:10] = int_i;
+            
             if (we == 1'b1) begin
                 case (waddr)
                 `CP0_REG_COMPARE : begin
                     cp0_reg_compare <= wdata;
-                    timer_int_o <= 1'b0;
                 end
                 `CP0_REG_STATUS : begin
                     cp0_reg_status <= wdata;
