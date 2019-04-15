@@ -28,7 +28,7 @@ module mips(
     wire[5:0] funct;
     wire[15:0] imm16;
     wire[25:0] imm26;
-    wire[31:0] extimm16, extimm16E, upperimm16, upperimm16E;
+    wire[31:0] extimm16, extimm16E, upperimm16, upperimm16E, zextimm16, zextimm16E;
     wire[31:0] extimm26;
     wire[31:0] pc_plus4D;
     wire reg_wen;
@@ -231,6 +231,11 @@ module mips(
         .out32(extimm16)
     );
     
+    zero_extend_imm16 zext_imm16(
+        .imm16(imm16),
+        .out32(zextimm16)
+    );
+    
     extend_imm26 ext_imm26(
         .imm26(imm26),
         .out32(extimm26)
@@ -307,6 +312,7 @@ module mips(
         .in_sa(sa),
         .in_extimm16(extimm16),
         .in_upperimm16(upperimm16),
+        .in_zextimm16(zextimm16),
         .in_pc_plus4(pc_plus4D),
         .in_exception_type(exception_type),
         .in_is_in_delayslot(is_in_delayslot),
@@ -318,6 +324,7 @@ module mips(
         .out_sa(saE),
         .out_extimm16(extimm16E),
         .out_upperimm16(upperimm16E),
+        .out_zextimm16(zextimm16E),
         .out_pc_plus4(pc_plus4E),
         .out_exception_type(exception_typeE),
         .out_is_in_delayslot(is_in_delayslotE)
@@ -374,6 +381,7 @@ module mips(
         .in1(forward_B),
         .in2(extimm16E),
         .in3(32'h00000000),
+        .in4(zextimm16E),
         .sel(sel_srcBE),
         .out(srcB)
     );

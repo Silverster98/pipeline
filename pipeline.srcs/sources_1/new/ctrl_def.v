@@ -53,6 +53,7 @@
 `define SEL_SRCB_FORD  2'b00
 `define SEL_SRCB_IMM   2'b01
 `define SEL_SRCB_0     2'b10
+`define SEL_SRCB_ZIMM  2'b11
 
 // about mem instruction type
 `define MEM_TYPE_WIDTH 4

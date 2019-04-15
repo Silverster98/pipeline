@@ -496,7 +496,7 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_AND;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = `SEL_SRCB_IMM;
+                sel_srcB   = `SEL_SRCB_ZIMM;
                 sel_regdst = `SEL_REGDST_RT;
                 mem_type   = `MEM_NONE;
                 sel_reg_wdata = `SEL_REG_WDATA_ALUOUT;
@@ -530,7 +530,7 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_OR;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = `SEL_SRCB_IMM;
+                sel_srcB   = `SEL_SRCB_ZIMM;
                 sel_regdst = `SEL_REGDST_RT;
                 mem_type   = `MEM_NONE;
                 sel_reg_wdata = `SEL_REG_WDATA_ALUOUT;
@@ -547,7 +547,7 @@ module cu(
                 branch_type = `BRANCH_NONE;
                 aluctrl    = `ALU_XOR;
                 sel_aluout = `SEL_ALUOUT_C;
-                sel_srcB   = `SEL_SRCB_IMM;
+                sel_srcB   = `SEL_SRCB_ZIMM;
                 sel_regdst = `SEL_REGDST_RT;
                 mem_type   = `MEM_NONE;
                 sel_reg_wdata = `SEL_REG_WDATA_ALUOUT;
