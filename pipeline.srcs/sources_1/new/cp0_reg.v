@@ -29,17 +29,16 @@ module cp0_reg(
             cp0_reg_count <= 32'h00000000;
             timer_int_o <= 1'b0;
         end else begin
-            cp0_reg_count = cp0_reg_count + 1; // stall
-            timer_int_o = 1'b0; // stall
-            
-            if (we == 1'b1) begin
-                if (waddr == `CP0_REG_COUNT) begin
-                    cp0_reg_count <= wdata;
-                end
+            if (we == 1'b1 && waddr == `CP0_REG_COUNT) begin
+                cp0_reg_count <= wdata;
+            end else begin
+                cp0_reg_count <= cp0_reg_count + 1;
             end
             
             if (cp0_reg_compare != 32'h00000000 && cp0_reg_count == cp0_reg_compare) begin
                 timer_int_o <= 1'b1;
+            end else begin
+                timer_int_o <= 1'b0;
             end
         end
     end
@@ -52,7 +51,7 @@ module cp0_reg(
             cp0_reg_epc <= 32'h00000000;
             cp0_reg_config <= 32'h00000000;
         end else begin
-            cp0_reg_cause[15:10] = int_i;
+            cp0_reg_cause[15:10] <= int_i;
             
             if (we == 1'b1) begin
                 case (waddr)

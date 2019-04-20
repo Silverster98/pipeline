@@ -15,7 +15,7 @@ module testbench();
 //        $readmemh("/home/silvester/project/pipeline/regdata.txt", mips_core.mips_regfile.gpr);
         rst = 1;
         clk = 0;
-        #17 rst = 0;
+        #201 rst = 0;
         #16000
         $stop;
         
